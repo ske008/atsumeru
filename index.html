@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>アツメル - 出欠＆集金アプリ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700;900&display=swap" rel="stylesheet" />
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #F7F6F3; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    const genId = () => Math.random().toString(36).slice(2, 10);
+    const fmtDate = (d) => new Date(d).toLocaleDateString("ja-JP", { year: "numeric", month: "short", day: "numeric" });
+
+    const db = {
+      get: (k) => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } },
+      set: (k, v) => localStorage.setItem(k, JSON.stringify(v)),
+    };
+
+    const T = {
+      bg: "#F7F6F3",
+      card: "#FFFFFF",
+      ink: "#1A1A1A",
+      ink2: "#5C5C5C",
+      ink3: "#9C9C9C",
+      border: "#E8E6E1",
+      accent: "#FF6B35",
+      accentLight: "#FFF3ED",
+      green: "#16A34A",
+      greenLight: "#DCFCE7",
+      yellow: "#D97706",
+      yellowLight: "#FEF3C7",
+      red: "#DC2626",
+      redLight: "#FEE2E2",
+      blue: "#2563EB",
+      blueLight: "#DBEAFE",
+      radius: "14px",
+      radiusSm: "10px",
+      shadow: "0 1px 8px rgba(0,0,0,0.05)",
+      shadowLg: "0 8px 30px rgba(0,0,0,0.08)",
+      font: "'Zen Maru Gothic', 'Noto Sans JP', sans-serif",
+    };
+
+    const s = {
+      container: { maxWidth: 480, margin: "0 auto", padding: "0 20px" },
+      card: { background: T.card, borderRadius: T.radius, border: `1px solid ${T.border}`, padding: 24, boxShadow: T.shadow },
+      btn: { display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "14px 24px", borderRadius: T.radiusSm, fontSize: "0.95rem", fontWeight: 700, border: "none", cursor: "pointer", transition: "all 0.15s", fontFamily: T.font, width: "100%" },
+      btnP: { background: T.accent, color: "#fff", boxShadow: "0 2px 8px rgba(255,107,53,0.25)" },
+      btnO: { background: "transparent", color: T.ink, border: `1.5px solid ${T.border}` },
+      btnSm: { padding: "8px 16px", fontSize: "0.8rem", width: "auto" },
+      input: { width: "100%", padding: "14px 16px", borderRadius: T.radiusSm, border: `1.5px solid ${T.border}`, fontSize: "0.95rem", fontFamily: T.font, background: T.bg, outline: "none", boxSizing: "border-box" },
+      label: { display: "block", fontSize: "0.78rem", fontWeight: 700, color: T.ink2, marginBottom: 6, letterSpacing: "0.02em" },
+      badge: (bg, color) => ({ display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 12px", borderRadius: 100, fontSize: "0.7rem", fontWeight: 700, background: bg, color }),
+      h1: { fontSize: "clamp(1.5rem, 5vw, 1.9rem)", fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.3 },
+      h2: { fontSize: "1.15rem", fontWeight: 700, letterSpacing: "-0.02em" },
+      sub: { fontSize: "0.83rem", color: T.ink2, lineHeight: 1.7 },
+    };
+
+    const Field = ({ label, children }) => (
+      <div style={{ marginBottom: 20 }}>
+        <label style={s.label}>{label}</label>
+        {children}
+      </div>
+    );
+
+    function Nav({ goHome, user, logout }) {
+      return (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 20px", maxWidth: 480, margin: "0 auto" }}>
+          <button onClick={goHome} style={{ fontSize: "1.3rem", fontWeight: 800, color: T.accent, background: "none", border: "none", fontFamily: T.font, cursor: "pointer", letterSpacing: "-0.02em" }}>
+            🧾 アツメル
+          </button>
+          {user && (
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <span style={{ fontSize: "0.72rem", color: T.ink3 }}>{user}</span>
+              <button onClick={logout} style={{ ...s.btn, ...s.btnO, ...s.btnSm }}>ログアウト</button>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    function Home({ go, user }) {
+      return (
+        <div style={{ ...s.container, paddingTop: 36, paddingBottom: 80, textAlign: "center" }}>
+          <div style={{ width: 72, height: 72, borderRadius: 18, background: T.accentLight, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 32, margin: "0 auto 20px" }}>🧾</div>
+          <h1 style={s.h1}>出欠も集金も、<br /><span style={{ color: T.accent }}>これひとつ。</span></h1>
+          <p style={{ ...s.sub, margin: "14px auto 36px", maxWidth: 300 }}>
+            イベント作成 → 出欠確認 → 集金<br />ぜんぶ1つのURLで完結します。
+          </p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 12, maxWidth: 280, margin: "0 auto" }}>
+            <button style={{ ...s.btn, ...s.btnP }} onClick={() => go(user ? "create" : "login")}>＋ イベントをつくる</button>
+            <button style={{ ...s.btn, ...s.btnO }} onClick={() => go(user ? "list" : "login")}>マイイベント</button>
+          </div>
+          <div style={{ marginTop: 56 }}>
+            <p style={{ fontSize: "0.72rem", color: T.ink3, fontWeight: 600, marginBottom: 20, letterSpacing: "0.1em" }}>3ステップでかんたん</p>
+            {[
+              { e: "📝", t: "イベント作成", d: "タイトルと日時だけでOK" },
+              { e: "🙋", t: "出欠をとる", d: "URLを送って参加者が回答" },
+              { e: "💰", t: "集金する", d: "ワンタップで送金＆確認" },
+            ].map((x, i) => (
+              <div key={i} style={{ ...s.card, display: "flex", alignItems: "center", gap: 14, textAlign: "left", marginBottom: 10 }}>
+                <div style={{ width: 44, height: 44, borderRadius: 11, background: T.accentLight, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, flexShrink: 0 }}>{x.e}</div>
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: "0.88rem" }}>{x.t}</div>
+                  <div style={{ fontSize: "0.78rem", color: T.ink2 }}>{x.d}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    function Login({ go, setUser }) {
+      const ref = useRef(null);
+      const [ok, setOk] = useState(false);
+      const handle = () => {
+        const v = ref.current?.value || "";
+        if (!v.includes("@")) return;
+        db.set("atsumeru_user", v);
+        setUser(v);
+        setOk(true);
+        setTimeout(() => go("list"), 600);
+      };
+      return (
+        <div style={{ ...s.container, paddingTop: 56 }}>
+          <div style={s.card}>
+            <h2 style={{ ...s.h2, marginBottom: 6 }}>ログイン</h2>
+            <p style={{ ...s.sub, marginBottom: 22 }}>メールアドレスだけでOK</p>
+            {ok ? (
+              <div style={{ textAlign: "center", padding: 20, background: T.greenLight, borderRadius: T.radiusSm }}>
+                <div style={{ fontSize: 28 }}>✅</div>
+                <div style={{ fontWeight: 700, color: T.green, marginTop: 6 }}>ログインしました</div>
+              </div>
+            ) : (
+              <>
+                <Field label="メールアドレス">
+                  <input ref={ref} style={s.input} type="email" inputMode="email" autoCapitalize="none" autoCorrect="off" spellCheck={false} placeholder="you@example.com" defaultValue="" />
+                </Field>
+                <button style={{ ...s.btn, ...s.btnP }} onClick={handle}>ログインする</button>
+              </>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    function Create({ go, user }) {
+      const titleRef = useRef(null);
+      const dateRef = useRef(null);
+      const placeRef = useRef(null);
+      const noteRef = useRef(null);
+
+      const handle = () => {
+        const title = titleRef.current?.value?.trim();
+        if (!title) return;
+        const ev = {
+          id: genId(),
+          title,
+          date: dateRef.current?.value || "",
+          place: placeRef.current?.value || "",
+          note: noteRef.current?.value || "",
+          createdBy: user,
+          createdAt: new Date().toISOString(),
+          members: [],
+          collecting: false,
+          amount: 0,
+          payUrl: "",
+        };
+        const all = db.get("atsumeru_events") || [];
+        all.push(ev);
+        db.set("atsumeru_events", all);
+        go("manage", ev.id);
+      };
+
+      return (
+        <div style={{ ...s.container, paddingTop: 24, paddingBottom: 80 }}>
+          <h2 style={{ ...s.h2, marginBottom: 20 }}>イベントをつくる</h2>
+          <div style={s.card}>
+            <Field label="イベント名 *">
+              <input ref={titleRef} style={s.input} type="text" inputMode="text" placeholder="例：2月の飲み会🍻" defaultValue="" />
+            </Field>
+            <Field label="日時（任意）">
+              <input ref={dateRef} style={s.input} type="datetime-local" defaultValue="" />
+            </Field>
+            <Field label="場所（任意）">
+              <input ref={placeRef} style={s.input} type="text" inputMode="text" placeholder="例：渋谷の居酒屋" defaultValue="" />
+            </Field>
+            <Field label="メモ（任意）">
+              <input ref={noteRef} style={s.input} type="text" inputMode="text" placeholder="例：遅刻する人は連絡ください" defaultValue="" />
+            </Field>
+            <button style={{ ...s.btn, ...s.btnP }} onClick={handle}>イベントを作成する</button>
+          </div>
+        </div>
+      );
+    }
+
+    function EventList({ go, user }) {
+      const events = (db.get("atsumeru_events") || []).filter((e) => e.createdBy === user);
+      return (
+        <div style={{ ...s.container, paddingTop: 24, paddingBottom: 80 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+            <h2 style={s.h2}>マイイベント</h2>
+            <button style={{ ...s.btn, ...s.btnP, ...s.btnSm }} onClick={() => go("create")}>＋ 新規</button>
+          </div>
+          {events.length === 0 ? (
+            <div style={{ ...s.card, textAlign: "center", padding: 44 }}>
+              <div style={{ fontSize: 36, marginBottom: 10 }}>📭</div>
+              <p style={{ color: T.ink3 }}>まだイベントがありません</p>
+              <button style={{ ...s.btn, ...s.btnP, marginTop: 16 }} onClick={() => go("create")}>最初のイベントをつくる</button>
+            </div>
+          ) : (
+            events.map((ev) => {
+              const yes = ev.members.filter((m) => m.rsvp === "yes").length;
+              const paid = ev.members.filter((m) => m.paid).length;
+              return (
+                <div key={ev.id} style={{ ...s.card, marginBottom: 10, cursor: "pointer" }} onClick={() => go("manage", ev.id)}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start" }}>
+                    <div>
+                      <div style={{ fontWeight: 700 }}>{ev.title}</div>
+                      <div style={{ fontSize: "0.78rem", color: T.ink3 }}>
+                        {ev.date ? fmtDate(ev.date) : "日時未定"}{ev.place ? ` ・ ${ev.place}` : ""}
+                      </div>
+                    </div>
+                    <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+                      <span style={s.badge(T.blueLight, T.blue)}>🙋 {yes}</span>
+                      {ev.collecting && <span style={s.badge(paid === yes ? T.greenLight : T.yellowLight, paid === yes ? T.green : T.yellow)}>💰 {paid}/{yes}</span>}
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+      );
+    }
+
+    function MemberRow({ m, onRemove }) {
+      return (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 0", borderBottom: `1px solid ${T.border}` }}>
+          <span style={{ fontWeight: 600, fontSize: "0.88rem" }}>{m.name}</span>
+          <button onClick={(e) => { e.stopPropagation(); onRemove(); }}
+            style={{ background: "none", border: "none", color: T.ink3, fontSize: "0.75rem", cursor: "pointer", fontFamily: T.font, padding: "4px 8px" }}>✕</button>
+        </div>
+      );
+    }
+
+    function Manage({ eventId, go }) {
+      const [ev, setEv] = useState(null);
+      const [tab, setTab] = useState("rsvp");
+      const [showSetup, setShowSetup] = useState(false);
+      const amountRef = useRef(null);
+      const payUrlRef = useRef(null);
+
+      const load = () => {
+        const all = db.get("atsumeru_events") || [];
+        setEv(all.find((e) => e.id === eventId) || null);
+      };
+      useEffect(() => {
+        load();
+        // 他タブ・参加者ページからのlocalStorage変更を検知
+        const onStorage = (e) => {
+          if (e.key === "atsumeru_events") load();
+        };
+        window.addEventListener("storage", onStorage);
+        // 同一タブ内でも1秒ごとに再読み込み（リアルタイム反映）
+        const timer = setInterval(load, 1000);
+        return () => {
+          window.removeEventListener("storage", onStorage);
+          clearInterval(timer);
+        };
+      }, [eventId]);
+
+      const save = (updated) => {
+        const all = db.get("atsumeru_events") || [];
+        const idx = all.findIndex((e) => e.id === eventId);
+        if (idx >= 0) all[idx] = updated;
+        db.set("atsumeru_events", all);
+        setEv(updated);
+      };
+
+      const copyLink = () => {
+        const url = `${window.location.origin}${window.location.pathname}?event=${eventId}`;
+        navigator.clipboard?.writeText(url).then(() => {
+          alert("共有リンクをコピーしました！\n参加者にこのURLを送ってください。\n\n" + url);
+        }).catch(() => {
+          prompt("このURLをコピーして参加者に送ってください：", url);
+        });
+      };
+
+      const startCollecting = () => {
+        const amount = Number(amountRef.current?.value);
+        const payUrl = payUrlRef.current?.value?.trim() || "";
+        if (!amount || amount <= 0) return;
+        save({ ...ev, collecting: true, amount, payUrl });
+        setShowSetup(false);
+      };
+
+      const togglePaid = (memberId) => {
+        save({
+          ...ev,
+          members: ev.members.map((m) =>
+            m.id === memberId ? { ...m, paid: !m.paid, paidAt: !m.paid ? new Date().toISOString() : null } : m
+          ),
+        });
+      };
+
+      const removeMember = (memberId) => {
+        save({ ...ev, members: ev.members.filter((m) => m.id !== memberId) });
+      };
+
+      if (!ev) return null;
+
+      const yesMembers = ev.members.filter((m) => m.rsvp === "yes");
+      const noMembers = ev.members.filter((m) => m.rsvp === "no");
+      const maybeMembers = ev.members.filter((m) => m.rsvp === "maybe");
+      const paidCount = yesMembers.filter((m) => m.paid).length;
+
+      return (
+        <div style={{ ...s.container, paddingTop: 20, paddingBottom: 80 }}>
+          <button style={{ ...s.btn, ...s.btnO, ...s.btnSm, marginBottom: 14 }} onClick={() => go("list")}>← 一覧</button>
+
+          <div style={{ ...s.card, marginBottom: 16 }}>
+            <h2 style={{ ...s.h2, marginBottom: 4 }}>{ev.title}</h2>
+            <p style={{ fontSize: "0.8rem", color: T.ink3 }}>
+              {ev.date ? fmtDate(ev.date) : "日時未定"}{ev.place ? ` ・ ${ev.place}` : ""}
+            </p>
+            {ev.note && <p style={{ fontSize: "0.8rem", color: T.ink2, marginTop: 6 }}>💬 {ev.note}</p>}
+            <button style={{ ...s.btn, ...s.btnO, marginTop: 14 }} onClick={copyLink}>🔗 参加者にURLを共有する</button>
+          </div>
+
+          <div style={{ display: "flex", gap: 0, marginBottom: 16, borderRadius: T.radiusSm, overflow: "hidden", border: `1.5px solid ${T.border}` }}>
+            {[
+              { key: "rsvp", label: `🙋 出欠 (${ev.members.length})` },
+              { key: "collect", label: `💰 集金${ev.collecting ? ` (${paidCount}/${yesMembers.length})` : ""}` },
+            ].map((t) => (
+              <button key={t.key} onClick={() => setTab(t.key)} style={{
+                flex: 1, padding: "11px 0", fontSize: "0.85rem", fontWeight: 700,
+                border: "none", cursor: "pointer", fontFamily: T.font,
+                background: tab === t.key ? T.accent : T.card,
+                color: tab === t.key ? "#fff" : T.ink2,
+                transition: "all 0.15s",
+              }}>
+                {t.label}
+              </button>
+            ))}
+          </div>
+
+          {tab === "rsvp" && (
+            <div style={s.card}>
+              {ev.members.length === 0 ? (
+                <div style={{ textAlign: "center", padding: 24 }}>
+                  <div style={{ fontSize: 32, marginBottom: 8 }}>🙋</div>
+                  <p style={{ color: T.ink3, fontSize: "0.85rem" }}>まだ回答がありません</p>
+                  <p style={{ color: T.ink3, fontSize: "0.78rem", marginTop: 6 }}>URLを共有して参加者を集めましょう</p>
+                </div>
+              ) : (
+                <>
+                  {yesMembers.length > 0 && (
+                    <div style={{ marginBottom: 16 }}>
+                      <div style={{ fontSize: "0.75rem", fontWeight: 700, color: T.green, marginBottom: 8 }}>⭕ 参加 ({yesMembers.length})</div>
+                      {yesMembers.map((m) => (
+                        <MemberRow key={m.id} m={m} onRemove={() => removeMember(m.id)} />
+                      ))}
+                    </div>
+                  )}
+                  {noMembers.length > 0 && (
+                    <div style={{ marginBottom: 16 }}>
+                      <div style={{ fontSize: "0.75rem", fontWeight: 700, color: T.red, marginBottom: 8 }}>✕ 不参加 ({noMembers.length})</div>
+                      {noMembers.map((m) => (
+                        <MemberRow key={m.id} m={m} onRemove={() => removeMember(m.id)} />
+                      ))}
+                    </div>
+                  )}
+                  {maybeMembers.length > 0 && (
+                    <div>
+                      <div style={{ fontSize: "0.75rem", fontWeight: 700, color: T.yellow, marginBottom: 8 }}>△ 未定 ({maybeMembers.length})</div>
+                      {maybeMembers.map((m) => (
+                        <MemberRow key={m.id} m={m} onRemove={() => removeMember(m.id)} />
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+
+          {tab === "collect" && (
+            <div style={s.card}>
+              {!ev.collecting ? (
+                showSetup ? (
+                  <>
+                    <h3 style={{ fontWeight: 700, fontSize: "0.95rem", marginBottom: 16 }}>集金設定</h3>
+                    <Field label="一人あたりの金額（円）*">
+                      <input ref={amountRef} style={s.input} type="number" inputMode="numeric" placeholder="4500" defaultValue="" />
+                    </Field>
+                    <Field label="送金先URL（PayPayなど・任意）">
+                      <input ref={payUrlRef} style={s.input} type="url" inputMode="url" autoCapitalize="none" autoCorrect="off" spellCheck={false} placeholder="https://pay.paypay.ne.jp/..." defaultValue="" />
+                    </Field>
+                    <div style={{ display: "flex", gap: 10 }}>
+                      <button style={{ ...s.btn, ...s.btnO, flex: 1 }} onClick={() => setShowSetup(false)}>キャンセル</button>
+                      <button style={{ ...s.btn, ...s.btnP, flex: 1 }} onClick={startCollecting}>集金を開始</button>
+                    </div>
+                  </>
+                ) : (
+                  <div style={{ textAlign: "center", padding: 24 }}>
+                    <div style={{ fontSize: 32, marginBottom: 8 }}>💰</div>
+                    <p style={{ color: T.ink2, fontSize: "0.85rem", marginBottom: 16 }}>出欠が集まったら集金を始めましょう</p>
+                    <button style={{ ...s.btn, ...s.btnP }} onClick={() => {
+                      if (yesMembers.length === 0) { alert("まだ参加者がいません"); return; }
+                      setShowSetup(true);
+                    }}>集金設定をする</button>
+                  </div>
+                )
+              ) : (
+                <>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                    <div>
+                      <span style={{ fontWeight: 700 }}>¥{ev.amount.toLocaleString()}</span>
+                      <span style={{ fontSize: "0.8rem", color: T.ink3 }}> / 人</span>
+                    </div>
+                    <span style={s.badge(paidCount === yesMembers.length ? T.greenLight : T.yellowLight, paidCount === yesMembers.length ? T.green : T.yellow)}>
+                      {paidCount}/{yesMembers.length} 済み
+                    </span>
+                  </div>
+                  <div style={{ background: T.bg, borderRadius: 100, height: 8, marginBottom: 16, overflow: "hidden" }}>
+                    <div style={{
+                      height: "100%", borderRadius: 100, transition: "width 0.3s",
+                      width: yesMembers.length > 0 ? `${(paidCount / yesMembers.length) * 100}%` : "0%",
+                      background: paidCount === yesMembers.length ? T.green : `linear-gradient(90deg, ${T.accent}, ${T.yellow})`,
+                    }} />
+                  </div>
+                  {yesMembers.map((m) => (
+                    <div key={m.id} onClick={() => togglePaid(m.id)} style={{
+                      display: "flex", alignItems: "center", justifyContent: "space-between",
+                      padding: "12px 0", borderBottom: `1px solid ${T.border}`,
+                      cursor: "pointer", userSelect: "none",
+                    }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                        <div style={{
+                          width: 26, height: 26, borderRadius: 7,
+                          background: m.paid ? T.green : T.border,
+                          color: "#fff", display: "flex", alignItems: "center", justifyContent: "center",
+                          fontSize: 13, fontWeight: 700, transition: "all 0.15s",
+                        }}>{m.paid ? "✓" : ""}</div>
+                        <span style={{ fontWeight: 600, fontSize: "0.88rem", color: m.paid ? T.ink3 : T.ink }}>{m.name}</span>
+                      </div>
+                      <span style={s.badge(m.paid ? T.greenLight : T.yellowLight, m.paid ? T.green : T.yellow)}>
+                        {m.paid ? "済み" : "未払い"}
+                      </span>
+                    </div>
+                  ))}
+                  <div style={{ marginTop: 16, fontSize: "0.78rem", color: T.ink3, textAlign: "center" }}>
+                    合計: ¥{(paidCount * ev.amount).toLocaleString()} / ¥{(yesMembers.length * ev.amount).toLocaleString()}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    function ParticipantPage({ eventId }) {
+      const [ev, setEv] = useState(null);
+      const [step, setStep] = useState("rsvp");
+      const [myName, setMyName] = useState("");
+      const nameRef = useRef(null);
+
+      const load = () => {
+        const all = db.get("atsumeru_events") || [];
+        setEv(all.find((e) => e.id === eventId) || null);
+      };
+      useEffect(() => {
+        load();
+        const onStorage = (e) => {
+          if (e.key === "atsumeru_events") load();
+        };
+        window.addEventListener("storage", onStorage);
+        const timer = setInterval(load, 1000);
+        return () => {
+          window.removeEventListener("storage", onStorage);
+          clearInterval(timer);
+        };
+      }, [eventId]);
+
+      useEffect(() => {
+        if (step !== "paying") return;
+        const h = () => { if (document.visibilityState === "visible") setStep("confirm"); };
+        const f = () => setStep("confirm");
+        document.addEventListener("visibilitychange", h);
+        window.addEventListener("focus", f);
+        return () => { document.removeEventListener("visibilitychange", h); window.removeEventListener("focus", f); };
+      }, [step]);
+
+      const submitRsvp = (rsvp) => {
+        const name = nameRef.current?.value?.trim();
+        if (!name) { alert("名前を入力してください"); return; }
+        const all = db.get("atsumeru_events") || [];
+        const updated = all.map((e) => {
+          if (e.id !== eventId) return e;
+          const existing = e.members.find((m) => m.name === name);
+          if (existing) {
+            return { ...e, members: e.members.map((m) => m.name === name ? { ...m, rsvp } : m) };
+          }
+          return { ...e, members: [...e.members, { id: genId(), name, rsvp, paid: false, paidAt: null }] };
+        });
+        db.set("atsumeru_events", updated);
+        setMyName(name);
+        setEv(updated.find((e) => e.id === eventId));
+        setStep("rsvp_done");
+      };
+
+      const openPayLink = () => {
+        setStep("paying");
+        setTimeout(() => { window.open(ev.payUrl, "_blank"); }, 100);
+      };
+
+      const confirmPaid = () => {
+        const all = db.get("atsumeru_events") || [];
+        const updated = all.map((e) => {
+          if (e.id !== eventId) return e;
+          return { ...e, members: e.members.map((m) => m.name === myName ? { ...m, paid: true, paidAt: new Date().toISOString() } : m) };
+        });
+        db.set("atsumeru_events", updated);
+        setStep("done");
+      };
+
+      if (!ev) {
+        return (
+          <div style={{ ...s.container, paddingTop: 56, textAlign: "center" }}>
+            <div style={s.card}>
+              <div style={{ fontSize: 36, marginBottom: 10 }}>🤔</div>
+              <p style={{ color: T.ink2 }}>イベントが見つかりません</p>
+            </div>
+          </div>
+        );
+      }
+
+      if (step === "done") {
+        return (
+          <div style={{ ...s.container, paddingTop: 56, textAlign: "center" }}>
+            <div style={s.card}>
+              <div style={{ fontSize: 44, marginBottom: 10 }}>🎉</div>
+              <h2 style={{ ...s.h2, color: T.green, marginBottom: 6 }}>支払い報告完了！</h2>
+              <p style={s.sub}>幹事さんに反映されました。ありがとう！</p>
+            </div>
+          </div>
+        );
+      }
+
+      if (step === "confirm") {
+        return (
+          <div style={{ ...s.container, paddingTop: 56 }}>
+            <div style={{ ...s.card, textAlign: "center", border: `2px solid ${T.accent}`, boxShadow: T.shadowLg }}>
+              <div style={{ fontSize: 44, marginBottom: 12 }}>💸</div>
+              <h2 style={{ ...s.h2, marginBottom: 6 }}>送金できた？</h2>
+              <p style={{ ...s.sub, marginBottom: 22 }}>{myName}さん、送金は完了しましたか？</p>
+              <button style={{ ...s.btn, background: T.green, color: "#fff", boxShadow: `0 2px 8px rgba(22,163,74,0.25)`, marginBottom: 10 }} onClick={confirmPaid}>
+                ✅ はい、送金しました！
+              </button>
+              <button style={{ ...s.btn, ...s.btnO }} onClick={() => setStep("rsvp_done")}>まだしてない</button>
+            </div>
+          </div>
+        );
+      }
+
+      if (step === "paying") {
+        return (
+          <div style={{ ...s.container, paddingTop: 56, textAlign: "center" }}>
+            <div style={s.card}>
+              <div style={{
+                width: 40, height: 40, borderRadius: "50%",
+                border: `3px solid ${T.border}`, borderTopColor: T.accent,
+                animation: "spin 1s linear infinite", margin: "0 auto 16px",
+              }} />
+              <h2 style={{ ...s.h2, marginBottom: 6 }}>送金中...</h2>
+              <p style={{ ...s.sub, marginBottom: 20 }}>送金したらここに戻ってきてね</p>
+              <button style={{ ...s.btn, ...s.btnO }} onClick={() => setStep("confirm")}>送金が終わった</button>
+            </div>
+          </div>
+        );
+      }
+
+      const yesMembers = ev.members.filter((m) => m.rsvp === "yes");
+      const myMember = myName ? ev.members.find((m) => m.name === myName) : null;
+
+      if (step === "rsvp_done") {
+        return (
+          <div style={{ ...s.container, paddingTop: 24, paddingBottom: 80 }}>
+            <div style={{ textAlign: "center", marginBottom: 20 }}>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: T.accentLight, color: T.accent, fontWeight: 700, fontSize: "0.72rem", padding: "5px 14px", borderRadius: 100 }}>🧾 アツメル</div>
+            </div>
+            <div style={s.card}>
+              <div style={{ textAlign: "center", marginBottom: 16 }}>
+                <div style={{ fontSize: 32, marginBottom: 8 }}>✅</div>
+                <p style={{ fontWeight: 700 }}>回答しました！</p>
+                <p style={{ fontSize: "0.8rem", color: T.ink3 }}>{myName}さん → {myMember?.rsvp === "yes" ? "参加" : myMember?.rsvp === "no" ? "不参加" : "未定"}</p>
+              </div>
+
+              {ev.collecting && myMember?.rsvp === "yes" && !myMember?.paid && (
+                <div style={{ borderTop: `1px solid ${T.border}`, paddingTop: 20, marginTop: 16 }}>
+                  <div style={{ textAlign: "center" }}>
+                    <div style={{ fontSize: "1.8rem", fontWeight: 800, color: T.accent, marginBottom: 4 }}>¥{ev.amount.toLocaleString()}</div>
+                    <p style={{ fontSize: "0.78rem", color: T.ink3, marginBottom: 16 }}>おひとりさまの金額</p>
+                  </div>
+                  {ev.payUrl ? (
+                    <button style={{ ...s.btn, background: "#FF0033", color: "#fff", boxShadow: "0 2px 8px rgba(255,0,51,0.25)" }} onClick={openPayLink}>💰 PayPayで送金する</button>
+                  ) : (
+                    <button style={{ ...s.btn, ...s.btnP }} onClick={() => setStep("confirm")}>✅ 送金したので報告する</button>
+                  )}
+                </div>
+              )}
+
+              {ev.collecting && myMember?.paid && (
+                <div style={{ borderTop: `1px solid ${T.border}`, paddingTop: 20, marginTop: 16, textAlign: "center" }}>
+                  <div style={{ fontSize: 28, marginBottom: 6 }}>💚</div>
+                  <p style={{ fontWeight: 700, color: T.green }}>支払い済みです</p>
+                </div>
+              )}
+
+              <div style={{ borderTop: `1px solid ${T.border}`, paddingTop: 16, marginTop: 20 }}>
+                <p style={{ fontSize: "0.75rem", fontWeight: 700, color: T.ink3, marginBottom: 8 }}>参加者 ({yesMembers.length})</p>
+                {yesMembers.map((m) => (
+                  <div key={m.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "5px 0" }}>
+                    <span style={{ fontSize: "0.83rem" }}>{m.name}</span>
+                    {ev.collecting && <span style={s.badge(m.paid ? T.greenLight : T.yellowLight, m.paid ? T.green : T.yellow)}>{m.paid ? "済" : "未"}</span>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      // あとから支払いボタンを押したとき：名前で既存メンバーを探してステップ遷移
+      const handlePayLater = () => {
+        const name = nameRef.current?.value?.trim();
+        if (!name) { alert("名前を入力してください"); return; }
+        const member = ev.members.find((m) => m.name === name);
+        if (!member) { alert("その名前での回答が見つかりません。\n先に出欠を回答してください。"); return; }
+        if (member.rsvp !== "yes") { alert("参加回答している方のみ支払いできます。"); return; }
+        if (member.paid) { alert("すでに支払い済みです！"); return; }
+        setMyName(name);
+        if (ev.payUrl) {
+          openPayLink();
+        } else {
+          setStep("confirm");
+        }
+      };
+
+      return (
+        <div style={{ ...s.container, paddingTop: 24, paddingBottom: 80 }}>
+          <div style={{ textAlign: "center", marginBottom: 20 }}>
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: T.accentLight, color: T.accent, fontWeight: 700, fontSize: "0.72rem", padding: "5px 14px", borderRadius: 100 }}>🧾 アツメル</div>
+          </div>
+          <div style={s.card}>
+            <h2 style={{ ...s.h2, marginBottom: 4 }}>{ev.title}</h2>
+            <p style={{ fontSize: "0.8rem", color: T.ink3, marginBottom: 4 }}>
+              {ev.date ? fmtDate(ev.date) : "日時未定"}{ev.place ? ` ・ ${ev.place}` : ""}
+            </p>
+            {ev.note && <p style={{ fontSize: "0.8rem", color: T.ink2 }}>💬 {ev.note}</p>}
+
+            <div style={{ height: 1, background: T.border, margin: "20px 0" }} />
+
+            <p style={{ fontWeight: 700, fontSize: "0.9rem", marginBottom: 12 }}>出欠を回答する</p>
+            <Field label="名前">
+              <input ref={nameRef} style={s.input} type="text" inputMode="text" placeholder="あなたの名前" defaultValue="" />
+            </Field>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button style={{ ...s.btn, background: T.green, color: "#fff", flex: 1 }} onClick={() => submitRsvp("yes")}>⭕ 参加</button>
+              <button style={{ ...s.btn, background: T.yellow, color: "#fff", flex: 1 }} onClick={() => submitRsvp("maybe")}>△ 未定</button>
+              <button style={{ ...s.btn, background: T.red, color: "#fff", flex: 1 }} onClick={() => submitRsvp("no")}>✕ 不参加</button>
+            </div>
+
+            {/* あとから支払うボタン：集金中のときだけ表示 */}
+            {ev.collecting && (
+              <div style={{ marginTop: 20, padding: 16, background: T.accentLight, borderRadius: T.radiusSm }}>
+                <p style={{ fontSize: "0.78rem", fontWeight: 700, color: T.accent, marginBottom: 10 }}>💰 あとから支払う方はこちら</p>
+                <p style={{ fontSize: "0.72rem", color: T.ink2, marginBottom: 12 }}>上の欄に名前を入力して、下のボタンを押してください</p>
+                <button style={{ ...s.btn, ...s.btnP }} onClick={handlePayLater}>
+                  💳 支払いページへ進む（¥{ev.amount.toLocaleString()}）
+                </button>
+              </div>
+            )}
+
+            {ev.members.length > 0 && (
+              <div style={{ marginTop: 24 }}>
+                <p style={{ fontSize: "0.75rem", fontWeight: 700, color: T.ink3, marginBottom: 8 }}>回答状況 ({ev.members.length}人)</p>
+                {ev.members.map((m) => (
+                  <div key={m.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "5px 0" }}>
+                    <span style={{ fontSize: "0.83rem" }}>{m.name}</span>
+                    <span style={s.badge(
+                      m.rsvp === "yes" ? T.greenLight : m.rsvp === "no" ? T.redLight : T.yellowLight,
+                      m.rsvp === "yes" ? T.green : m.rsvp === "no" ? T.red : T.yellow,
+                    )}>{m.rsvp === "yes" ? "⭕" : m.rsvp === "no" ? "✕" : "△"}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    function App() {
+      const [page, setPage] = useState("home");
+      const [pageArg, setPageArg] = useState(null);
+      const [user, setUser] = useState(null);
+
+      const go = (p, arg) => { setPage(p); setPageArg(arg || null); };
+
+      useEffect(() => {
+        const saved = db.get("atsumeru_user");
+        if (saved) setUser(saved);
+        const params = new URLSearchParams(window.location.search);
+        const eid = params.get("event");
+        if (eid) { setPage("participant"); setPageArg(eid); }
+      }, []);
+
+      const logout = () => { setUser(null); db.set("atsumeru_user", null); go("home"); };
+
+      return (
+        <div style={{ fontFamily: T.font, background: T.bg, color: T.ink, minHeight: "100vh", lineHeight: 1.7, WebkitFontSmoothing: "antialiased" }}>
+          {page !== "participant" && <Nav goHome={() => go("home")} user={user} logout={logout} />}
+          {page === "participant" && <ParticipantPage eventId={pageArg} />}
+          {page === "home" && <Home go={go} user={user} />}
+          {page === "login" && <Login go={go} setUser={setUser} />}
+          {page === "create" && <Create go={go} user={user} />}
+          {page === "list" && <EventList go={go} user={user} />}
+          {page === "manage" && <Manage eventId={pageArg} go={go} />}
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById("root"));
+    root.render(<App />);
+  </script>
+</body>
+</html>
