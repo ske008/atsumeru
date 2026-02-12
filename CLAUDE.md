@@ -15,6 +15,8 @@ python3 -m http.server 8080
 
 ブラウザで `http://localhost:8080/` を開く。ビルド不要。
 
+**デプロイ**: `main` を含む全ブランチへの push が GitHub Actions で自動的に GitHub Pages へデプロイされる（`.github/workflows/pages.yml`）。
+
 ## アーキテクチャ
 
 **単一ファイル構成**: `index.html` にすべてが含まれる。
