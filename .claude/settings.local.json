@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(start \"\" \"C:\\\\business\\\\athumeru\\\\index.html\")",
+      "Bash(git init:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfeat: アツメル初回リリース\n\n出欠確認・集金管理をURLひとつで完結するシングルページアプリ。\n- イベント作成・管理（幹事画面）\n- 出欠回答（参加者画面）\n- 集金管理とPayPay連携\n- リアルタイム反映（1秒ポーリング＋storageイベント）\n- あとから支払いできるボタンを参加者画面に追加\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git commit:*)",
+      "Bash(gh auth status)",
+      "Bash(git push -u origin master)"
+    ]
+  }
+}
