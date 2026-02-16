@@ -2,8 +2,8 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>アツメル</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>アチE��ル</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet" />
   <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
@@ -12,14 +12,19 @@
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
     html { font-size: 16px; }
-    body { background: #F5F4F1; -webkit-font-smoothing: antialiased; }
+    body { background: #F5F4F1; -webkit-font-smoothing: antialiased; min-height: 100vh; padding-bottom: env(safe-area-inset-bottom); }
+    input, button, select, textarea { font-size: 16px !important; }
     @keyframes spin { to { transform: rotate(360deg); } }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
     input:focus { border-color: #2D5A3D !important; background: #fff !important; }
     button:hover { opacity: 0.88; }
+    button:active { opacity: 0.72; transform: scale(0.98); }
+    .rsvp-actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+    @media (max-width: 420px) { .rsvp-actions { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
+  <div style='padding:8px 12px;background:#e6f5ee;border-bottom:1px solid #b7e1cb;font-family:sans-serif;font-size:14px;'>�V�ł͂�����: <a href='/' style='color:#0b4f32;font-weight:700;'>Next�ł��J��</a></div>
   <div id="root"></div>
 
   <script type="text/babel">
@@ -33,7 +38,7 @@
       set: (k, v) => localStorage.setItem(k, JSON.stringify(v)),
     };
 
-    /* ── デザイントークン ── */
+    /* ── チE��イント�Eクン ── */
     const C = {
       bg:          "#F5F4F1",
       surface:     "#FFFFFF",
@@ -43,7 +48,7 @@
       textSub:     "#6B6B67",
       textMuted:   "#A0A09C",
 
-      primary:     "#2D5A3D",   /* 深緑 */
+      primary:     "#2D5A3D",   /* 深緁E*/
       primaryBg:   "#EEF4F0",
       primaryText: "#1A3D28",
 
@@ -67,7 +72,11 @@
 
     /* ── 共通スタイル ── */
     const S = {
-      wrap:    { maxWidth: 480, margin: "0 auto", padding: "0 16px" },
+      wrap:    {
+        maxWidth: 480, margin: "0 auto", width: "100%",
+        paddingLeft: "max(16px, env(safe-area-inset-left))",
+        paddingRight: "max(16px, env(safe-area-inset-right))"
+      },
       card:    { background: C.surface, borderRadius: C.radiusLg, border: `1px solid ${C.border}`, padding: "20px" },
       cardLg:  { background: C.surface, borderRadius: C.radiusLg, border: `1px solid ${C.border}`, padding: "28px 24px" },
 
@@ -92,7 +101,7 @@
       label:  { display: "block", fontSize: "0.75rem", fontWeight: 600,
                 color: C.textSub, marginBottom: 5, letterSpacing: "0.03em" },
 
-      /* テキスト */
+      /* チE��スチE*/
       h1: { fontSize: "1.65rem", fontWeight: 700, letterSpacing: "-0.02em", lineHeight: 1.25, color: C.text },
       h2: { fontSize: "1.05rem", fontWeight: 700, letterSpacing: "-0.01em", color: C.text },
       sub: { fontSize: "0.83rem", color: C.textSub, lineHeight: 1.65 },
@@ -123,12 +132,12 @@
           <div style={{ ...S.wrap, display: "flex", alignItems: "center", justifyContent: "space-between", height: 52 }}>
             <button onClick={goHome} style={{ fontSize: "0.95rem", fontWeight: 700, color: C.primary,
               background: "none", border: "none", fontFamily: C.font, cursor: "pointer", letterSpacing: "-0.01em" }}>
-              アツメル
+              アチE��ル
             </button>
             {user && (
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <span style={{ fontSize: "0.72rem", color: C.textMuted }}>{user}</span>
-                <button onClick={logout} style={{ ...S.btn, ...S.btnGhost, ...S.btnSm }}>ログアウト</button>
+                <button onClick={logout} style={{ ...S.btn, ...S.btnGhost, ...S.btnSm }}>ログアウチE/button>
               </div>
             )}
           </div>
@@ -136,16 +145,16 @@
       );
     }
 
-    /* ── ホーム ── */
+    /* ── ホ�Eム ── */
     function Home({ go, user }) {
       return (
         <div style={{ ...S.wrap, paddingTop: 48, paddingBottom: 80, ...S.anim }}>
           <div style={{ marginBottom: 40 }}>
             <h1 style={{ ...S.h1, marginBottom: 12 }}>
-              出欠も集金も、<br />これひとつで。
+              出欠も集金も、Ebr />これひとつで、E
             </h1>
             <p style={{ ...S.sub, maxWidth: 300 }}>
-              イベントを作ってURLを共有するだけ。<br />出欠確認から集金まで一括管理できます。
+              イベントを作ってURLを�E有するだけ、Ebr />出欠確認から集金まで一括管琁E��きます、E
             </p>
           </div>
 
@@ -154,17 +163,17 @@
               イベントをつくる
             </button>
             <button style={{ ...S.btn, ...S.btnGhost }} onClick={() => go(user ? "list" : "login")}>
-              マイイベント
+              マイイベンチE
             </button>
           </div>
 
           <div>
             <p style={{ fontSize: "0.7rem", fontWeight: 700, color: C.textMuted, marginBottom: 14,
-              letterSpacing: "0.08em", textTransform: "uppercase" }}>使い方</p>
+              letterSpacing: "0.08em", textTransform: "uppercase" }}>使ぁE��</p>
             {[
-              { step: "1", t: "イベントを作成", d: "タイトルと日時だけでOK" },
-              { step: "2", t: "URLを共有", d: "参加者がそのまま出欠回答" },
-              { step: "3", t: "集金を管理", d: "支払い状況をひとめで確認" },
+              { step: "1", t: "イベントを作�E", d: "タイトルと日時だけでOK" },
+              { step: "2", t: "URLを�E朁E, d: "参加老E��そ�Eまま出欠回筁E },
+              { step: "3", t: "雁E��を管琁E, d: "支払い状況をひとめで確誁E },
             ].map((x) => (
               <div key={x.step} style={{ display: "flex", alignItems: "flex-start", gap: 14,
                 padding: "14px 0", borderBottom: `1px solid ${C.border}` }}>
@@ -200,7 +209,7 @@
         <div style={{ ...S.wrap, paddingTop: 48, ...S.anim }}>
           <div style={S.cardLg}>
             <h2 style={{ ...S.h2, marginBottom: 4 }}>ログイン</h2>
-            <p style={{ ...S.sub, marginBottom: 24 }}>メールアドレスだけで利用できます</p>
+            <p style={{ ...S.sub, marginBottom: 24 }}>メールアドレスだけで利用できまぁE/p>
             {ok ? (
               <div style={{ textAlign: "center", padding: "24px 0", background: C.successBg,
                 borderRadius: C.radius, color: C.success, fontWeight: 600 }}>
@@ -213,7 +222,7 @@
                     type="email" inputMode="email" autoCapitalize="none"
                     autoCorrect="off" spellCheck={false} placeholder="you@example.com" defaultValue=""
                     onKeyDown={(e) => e.key === "Enter" && handle()} />
-                  {err && <p style={{ fontSize: "0.72rem", color: C.danger, marginTop: 4 }}>正しいメールアドレスを入力してください</p>}
+                  {err && <p style={{ fontSize: "0.72rem", color: C.danger, marginTop: 4 }}>正しいメールアドレスを�E力してください</p>}
                 </Field>
                 <button style={{ ...S.btn, ...S.btnPrimary }} onClick={handle}>ログイン</button>
               </>
@@ -223,7 +232,7 @@
       );
     }
 
-    /* ── イベント作成 ── */
+    /* ── イベント作�E ── */
     function Create({ go, user }) {
       const titleRef = useRef(null);
       const dateRef   = useRef(null);
@@ -252,26 +261,26 @@
       return (
         <div style={{ ...S.wrap, paddingTop: 28, paddingBottom: 80, ...S.anim }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
-            <button style={{ ...S.btn, ...S.btnGhost, ...S.btnSm }} onClick={() => go("list")}>← 戻る</button>
-            <h2 style={S.h2}>イベントを作成</h2>
+            <button style={{ ...S.btn, ...S.btnGhost, ...S.btnSm }} onClick={() => go("list")}>ↁE戻めE/button>
+            <h2 style={S.h2}>イベントを作�E</h2>
           </div>
           <div style={S.cardLg}>
             <Field label="イベント名 *">
               <input ref={titleRef} style={{ ...S.input, borderColor: err ? C.danger : C.border }}
-                type="text" placeholder="例：3月の飲み会" defaultValue=""
+                type="text" placeholder="例！E月�E飲み企E defaultValue=""
                 onKeyDown={(e) => e.key === "Enter" && handle()} />
-              {err && <p style={{ fontSize: "0.72rem", color: C.danger, marginTop: 4 }}>イベント名を入力してください</p>}
+              {err && <p style={{ fontSize: "0.72rem", color: C.danger, marginTop: 4 }}>イベント名を�E力してください</p>}
             </Field>
-            <Field label="日時（任意）">
+            <Field label="日時（任意！E>
               <input ref={dateRef} style={S.input} type="datetime-local" defaultValue="" />
             </Field>
-            <Field label="場所（任意）">
-              <input ref={placeRef} style={S.input} type="text" placeholder="例：渋谷の居酒屋" defaultValue="" />
+            <Field label="場所�E�任意！E>
+              <input ref={placeRef} style={S.input} type="text" placeholder="例：渋谷の屁E�E屁E defaultValue="" />
             </Field>
-            <Field label="メモ（任意）">
-              <input ref={noteRef} style={S.input} type="text" placeholder="例：遅刻する場合は連絡を" defaultValue="" />
+            <Field label="メモ�E�任意！E>
+              <input ref={noteRef} style={S.input} type="text" placeholder="例：遅刻する場合�E連絡めE defaultValue="" />
             </Field>
-            <button style={{ ...S.btn, ...S.btnPrimary, marginTop: 4 }} onClick={handle}>作成する</button>
+            <button style={{ ...S.btn, ...S.btnPrimary, marginTop: 4 }} onClick={handle}>作�Eする</button>
           </div>
         </div>
       );
@@ -283,8 +292,8 @@
       return (
         <div style={{ ...S.wrap, paddingTop: 28, paddingBottom: 80, ...S.anim }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
-            <h2 style={S.h2}>マイイベント</h2>
-            <button style={{ ...S.btn, ...S.btnPrimary, ...S.btnSm }} onClick={() => go("create")}>+ 新規作成</button>
+            <h2 style={S.h2}>マイイベンチE/h2>
+            <button style={{ ...S.btn, ...S.btnPrimary, ...S.btnSm }} onClick={() => go("create")}>+ 新規作�E</button>
           </div>
 
           {events.length === 0 ? (
@@ -293,7 +302,7 @@
                 まだイベントがありません
               </p>
               <button style={{ ...S.btn, ...S.btnPrimary }} onClick={() => go("create")}>
-                最初のイベントを作成
+                最初�Eイベントを作�E
               </button>
             </div>
           ) : (
@@ -308,7 +317,7 @@
                         <div style={{ fontWeight: 600, fontSize: "0.9rem", marginBottom: 3,
                           whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{ev.title}</div>
                         <div style={{ fontSize: "0.75rem", color: C.textMuted }}>
-                          {ev.date ? fmtDate(ev.date) : "日時未定"}{ev.place ? `　${ev.place}` : ""}
+                          {ev.date ? fmtDate(ev.date) : "日時未宁E}{ev.place ? `　${ev.place}` : ""}
                         </div>
                       </div>
                       <div style={{ display: "flex", gap: 6, flexShrink: 0, marginLeft: 10 }}>
@@ -316,7 +325,7 @@
                         {ev.collecting && (
                           <span style={S.badge(paid === yes && yes > 0 ? C.successBg : C.warnBg,
                             paid === yes && yes > 0 ? C.success : C.warn)}>
-                            集金 {paid}/{yes}
+                            雁E�� {paid}/{yes}
                           </span>
                         )}
                       </div>
@@ -330,7 +339,7 @@
       );
     }
 
-    /* ── メンバー行（幹事用） ── */
+    /* ── メンバ�E行（幹事用�E�E── */
     function MemberRow({ m, onRemove }) {
       return (
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between",
@@ -343,13 +352,13 @@
       );
     }
 
-    /* ── 管理画面 ── */
+    /* ── 管琁E��面 ── */
     function Manage({ eventId, go }) {
-      const [ev, setEv]           = useState(null);
-      const [tab, setTab]         = useState("rsvp");
+      const [ev, setEv] = useState(null);
+      const [tab, setTab] = useState("rsvp");
       const [showSetup, setShowSetup] = useState(false);
-      const amountRef  = useRef(null);
-      const payUrlRef  = useRef(null);
+      const amountRef = useRef(null);
+      const payUrlRef = useRef(null);
 
       const load = () => {
         const all = db.get("atsumeru_events") || [];
@@ -371,14 +380,14 @@
         setEv(updated);
       };
 
-      const copyLink = () => {
-        const url = `${window.location.origin}${window.location.pathname}?event=${eventId}`;
-        navigator.clipboard?.writeText(url).then(() => {
-          alert("URLをコピーしました。参加者に送ってください。\n\n" + url);
-        }).catch(() => { prompt("このURLを参加者に送ってください：", url); });
-      };
+      const shareUrl = `${window.location.origin}${window.location.pathname}?event=${eventId}`;
 
-      const startCollecting = () => {
+      const copyLink = () => {
+        navigator.clipboard?.writeText(shareUrl).then(() => {
+          alert("URLをコピ�Eしました。参加老E��送ってください、En\n" + shareUrl);
+        }).catch(() => { prompt("こ�EURLを参加老E��送ってください�E�E, shareUrl); });
+      };
+const startCollecting = () => {
         const amount = Number(amountRef.current?.value);
         const payUrl = payUrlRef.current?.value?.trim() || "";
         if (!amount || amount <= 0) return;
@@ -403,157 +412,114 @@
 
       if (!ev) return null;
 
-      const yesMembers   = ev.members.filter((m) => m.rsvp === "yes");
-      const noMembers    = ev.members.filter((m) => m.rsvp === "no");
+      const yesMembers = ev.members.filter((m) => m.rsvp === "yes");
+      const noMembers = ev.members.filter((m) => m.rsvp === "no");
       const maybeMembers = ev.members.filter((m) => m.rsvp === "maybe");
-      const paidCount    = yesMembers.filter((m) => m.paid).length;
+      const paidCount = yesMembers.filter((m) => m.paid).length;
 
       return (
         <div style={{ ...S.wrap, paddingTop: 20, paddingBottom: 80, ...S.anim }}>
-          <button style={{ ...S.btn, ...S.btnGhost, ...S.btnSm, marginBottom: 16 }} onClick={() => go("list")}>← 一覧</button>
+          <button style={{ ...S.btn, ...S.btnGhost, ...S.btnSm, marginBottom: 16 }} onClick={() => go("list")}>戻めE/button>
 
-          {/* イベント情報 */}
           <div style={{ ...S.card, marginBottom: 12 }}>
             <h2 style={{ ...S.h2, marginBottom: 4 }}>{ev.title}</h2>
             <p style={{ fontSize: "0.78rem", color: C.textMuted }}>
-              {ev.date ? fmtDate(ev.date) : "日時未定"}{ev.place ? `　${ev.place}` : ""}
+              {ev.date ? fmtDate(ev.date) : "日時未宁E}{ev.place ? `　${ev.place}` : ""}
             </p>
             {ev.note && <p style={{ fontSize: "0.78rem", color: C.textSub, marginTop: 6 }}>{ev.note}</p>}
             <div style={S.divider} />
-            <button style={{ ...S.btn, ...S.btnGhost }} onClick={copyLink}>
-              参加者にURLを共有する
+
+            <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+              <input
+                style={{ ...S.input, flex: 1, background: C.surface }}
+                type="text"
+                readOnly
+                value={shareUrl}
+                onFocus={(e) => e.target.select()}
+              />
+              <button style={{ ...S.btn, ...S.btnPrimary, ...S.btnSm }} onClick={copyLink}>コピ�E</button>
+            </div>
+
+            <button style={{ ...S.btn, ...S.btnGhost }} onClick={() => setShowSetup(!showSetup)}>
+              {ev.collecting ? "雁E��設定を変更" : "雁E��を開姁E}
             </button>
-          </div>
 
-          {/* タブ */}
-          <div style={{ display: "flex", gap: 0, marginBottom: 12, border: `1px solid ${C.border}`,
-            borderRadius: C.radius, overflow: "hidden", background: C.surface }}>
-            {[
-              { key: "rsvp",    label: `出欠　${ev.members.length}名` },
-              { key: "collect", label: ev.collecting ? `集金　${paidCount}/${yesMembers.length}` : "集金" },
-            ].map((t) => (
-              <button key={t.key} onClick={() => setTab(t.key)} style={{
-                flex: 1, padding: "10px 0", fontSize: "0.82rem", fontWeight: 600,
-                border: "none", cursor: "pointer", fontFamily: C.font, letterSpacing: "0.01em",
-                background: tab === t.key ? C.primary : "transparent",
-                color:      tab === t.key ? "#fff" : C.textSub,
-                transition: "all 0.15s",
-              }}>
-                {t.label}
-              </button>
-            ))}
-          </div>
-
-          {/* 出欠タブ */}
-          {tab === "rsvp" && (
-            <div style={S.card}>
-              {ev.members.length === 0 ? (
-                <div style={{ padding: "28px 0", textAlign: "center" }}>
-                  <p style={{ color: C.textMuted, fontSize: "0.875rem" }}>まだ回答がありません</p>
-                  <p style={{ color: C.textMuted, fontSize: "0.78rem", marginTop: 6 }}>URLを共有して参加者を集めましょう</p>
+            {showSetup && (
+              <div style={{ marginTop: 16, padding: "16px", background: C.bg, borderRadius: C.radius }}>
+                <Field label="1人あたり�E金顁E>
+                  <input ref={amountRef} style={S.input} type="number" inputMode="numeric" placeholder="4500" defaultValue={ev.amount} />
+                </Field>
+                <Field label="送E��URL�E�EayPayなど・任意！E hint="入力すると参加老E��送E��ボタンが表示されまぁE>
+                  <input ref={payUrlRef} style={S.input} type="url" inputMode="url"
+                    autoCapitalize="none" autoCorrect="off" spellCheck={false}
+                    placeholder="https://pay.paypay.ne.jp/..." defaultValue={ev.payUrl} />
+                </Field>
+                <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+                  <button style={{ ...S.btn, ...S.btnGhost, flex: 1 }} onClick={() => setShowSetup(false)}>キャンセル</button>
+                  <button style={{ ...S.btn, ...S.btnPrimary, flex: 1 }} onClick={startCollecting}>雁E��を開姁E/button>
                 </div>
-              ) : (
-                <>
-                  {[
-                    { list: yesMembers,   label: `参加　${yesMembers.length}名`,   color: C.success },
-                    { list: noMembers,    label: `不参加　${noMembers.length}名`,  color: C.danger  },
-                    { list: maybeMembers, label: `未定　${maybeMembers.length}名`, color: C.warn    },
-                  ].filter(g => g.list.length > 0).map((g, i) => (
-                    <div key={i} style={{ marginBottom: 16 }}>
-                      <div style={{ fontSize: "0.72rem", fontWeight: 700, color: g.color,
-                        marginBottom: 6, letterSpacing: "0.03em" }}>{g.label}</div>
-                      {g.list.map((m) => (
-                        <MemberRow key={m.id} m={m} onRemove={() => removeMember(m.id)} />
-                      ))}
-                    </div>
-                  ))}
-                </>
+              </div>
+            )}
+          </div>
+
+          <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
+            <button onClick={() => setTab("rsvp")} style={{
+              ...S.btn, ...S.btnSm,
+              background: tab === "rsvp" ? C.primary : C.border,
+              color: tab === "rsvp" ? "#fff" : C.text,
+            }}>出欠 ({ev.members.length})</button>
+            <button onClick={() => setTab("collect")} style={{
+              ...S.btn, ...S.btnSm,
+              background: tab === "collect" ? C.primary : C.border,
+              color: tab === "collect" ? "#fff" : C.text,
+            }}>雁E�� ({yesMembers.length})</button>
+          </div>
+
+          {tab === "rsvp" && (
+            <div>
+              {yesMembers.length > 0 && (
+                <div style={{ marginBottom: 20 }}>
+                  <p style={{ fontSize: "0.75rem", fontWeight: 700, color: C.success, marginBottom: 8 }}>参加 ({yesMembers.length})</p>
+                  {yesMembers.map((m) => <MemberRow key={m.id} m={m} onRemove={() => removeMember(m.id)} />)}
+                </div>
+              )}
+              {maybeMembers.length > 0 && (
+                <div style={{ marginBottom: 20 }}>
+                  <p style={{ fontSize: "0.75rem", fontWeight: 700, color: C.warn, marginBottom: 8 }}>未宁E({maybeMembers.length})</p>
+                  {maybeMembers.map((m) => <MemberRow key={m.id} m={m} onRemove={() => removeMember(m.id)} />)}
+                </div>
+              )}
+              {noMembers.length > 0 && (
+                <div>
+                  <p style={{ fontSize: "0.75rem", fontWeight: 700, color: C.danger, marginBottom: 8 }}>不参加 ({noMembers.length})</p>
+                  {noMembers.map((m) => <MemberRow key={m.id} m={m} onRemove={() => removeMember(m.id)} />)}
+                </div>
               )}
             </div>
           )}
 
-          {/* 集金タブ */}
           {tab === "collect" && (
-            <div style={S.card}>
-              {!ev.collecting ? (
-                showSetup ? (
-                  <>
-                    <h3 style={{ fontWeight: 700, fontSize: "0.9rem", marginBottom: 16, color: C.text }}>集金設定</h3>
-                    <Field label="1人あたりの金額（円）*">
-                      <input ref={amountRef} style={S.input} type="number" inputMode="numeric" placeholder="4500" defaultValue="" />
-                    </Field>
-                    <Field label="送金先URL（PayPayなど・任意）" hint="入力すると参加者に送金ボタンが表示されます">
-                      <input ref={payUrlRef} style={S.input} type="url" inputMode="url"
-                        autoCapitalize="none" autoCorrect="off" spellCheck={false}
-                        placeholder="https://pay.paypay.ne.jp/..." defaultValue="" />
-                    </Field>
-                    <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
-                      <button style={{ ...S.btn, ...S.btnGhost, flex: 1 }} onClick={() => setShowSetup(false)}>キャンセル</button>
-                      <button style={{ ...S.btn, ...S.btnPrimary, flex: 1 }} onClick={startCollecting}>集金を開始</button>
-                    </div>
-                  </>
-                ) : (
-                  <div style={{ padding: "24px 0", textAlign: "center" }}>
-                    <p style={{ color: C.textSub, fontSize: "0.875rem", marginBottom: 20 }}>
-                      出欠が集まったら集金を開始できます
-                    </p>
-                    <button style={{ ...S.btn, ...S.btnPrimary }} onClick={() => {
-                      if (yesMembers.length === 0) { alert("まだ参加者がいません"); return; }
-                      setShowSetup(true);
-                    }}>集金を設定する</button>
-                  </div>
-                )
-              ) : (
+            <div>
+              {!ev.collecting && (
+                <div style={{ marginBottom: 12, padding: "12px", background: C.neutralBg, borderRadius: C.radius }}>
+                  <p style={{ fontSize: "0.78rem", color: C.textMuted }}>雁E��を開始するとチェチE��できまぁE/p>
+                </div>
+              )}
+              {ev.collecting && (
                 <>
-                  {/* 進捗ヘッダー */}
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-                    <span style={{ fontWeight: 700, fontSize: "1rem", color: C.text }}>
-                      ¥{ev.amount.toLocaleString()}
-                      <span style={{ fontWeight: 400, fontSize: "0.78rem", color: C.textMuted }}> / 人</span>
-                    </span>
-                    <span style={S.badge(
-                      paidCount === yesMembers.length ? C.successBg : C.warnBg,
-                      paidCount === yesMembers.length ? C.success   : C.warn
-                    )}>{paidCount}/{yesMembers.length} 完了</span>
+                  <div style={{ marginBottom: 16, padding: "12px", background: C.neutralBg, borderRadius: C.radius, textAlign: "center" }}>
+                    <p style={{ fontSize: "0.7rem", color: C.textMuted }}>雁E��状況E/p>
+                    <p style={{ fontSize: "1.2rem", fontWeight: 700, color: C.text, marginTop: 4 }}>{paidCount} / {yesMembers.length}</p>
                   </div>
-
-                  {/* プログレスバー */}
-                  <div style={{ background: C.bg, borderRadius: 4, height: 6, marginBottom: 18, overflow: "hidden" }}>
-                    <div style={{
-                      height: "100%", borderRadius: 4, transition: "width 0.4s ease",
-                      width: yesMembers.length > 0 ? `${(paidCount / yesMembers.length) * 100}%` : "0%",
-                      background: paidCount === yesMembers.length ? C.success : C.primary,
-                    }} />
-                  </div>
-
-                  {/* メンバーリスト */}
                   {yesMembers.map((m) => (
-                    <div key={m.id} onClick={() => togglePaid(m.id)} style={{
-                      display: "flex", alignItems: "center", justifyContent: "space-between",
-                      padding: "11px 0", borderBottom: `1px solid ${C.border}`,
-                      cursor: "pointer", userSelect: "none",
-                    }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                        <div style={{
-                          width: 20, height: 20, borderRadius: 4,
-                          border: m.paid ? "none" : `1.5px solid ${C.borderDark}`,
-                          background: m.paid ? C.success : "transparent",
-                          color: "#fff", display: "flex", alignItems: "center", justifyContent: "center",
-                          fontSize: 11, fontWeight: 700, transition: "all 0.15s", flexShrink: 0,
-                        }}>{m.paid ? "✓" : ""}</div>
-                        <span style={{ fontSize: "0.875rem", color: m.paid ? C.textMuted : C.text,
-                          textDecoration: m.paid ? "line-through" : "none" }}>{m.name}</span>
-                      </div>
-                      <span style={S.badge(
-                        m.paid ? C.successBg : C.warnBg,
-                        m.paid ? C.success   : C.warn
-                      )}>{m.paid ? "済み" : "未払い"}</span>
+                    <div key={m.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: `1px solid ${C.border}` }}>
+                      <span style={{ fontSize: "0.875rem", color: C.text }}>{m.name}</span>
+                      <button onClick={() => togglePaid(m.id)} style={{
+                        ...S.btn, ...S.btnSm,
+                        background: m.paid ? C.success : C.border, color: m.paid ? "#fff" : C.text,
+                      }}>{m.paid ? "渁E : "未"}</button>
                     </div>
                   ))}
-
-                  <div style={{ marginTop: 14, fontSize: "0.78rem", color: C.textMuted, textAlign: "right" }}>
-                    合計 ¥{(paidCount * ev.amount).toLocaleString()} / ¥{(yesMembers.length * ev.amount).toLocaleString()}
-                  </div>
                 </>
               )}
             </div>
@@ -561,19 +527,27 @@
         </div>
       );
     }
-
-    /* ── 参加者ページ ── */
     function ParticipantPage({ eventId }) {
-      const [ev, setEv]       = useState(null);
-      const [step, setStep]   = useState("rsvp");
+      const [ev, setEv] = useState(null);
+      const [step, setStep] = useState("rsvp");
       const [myName, setMyName] = useState("");
-      const [selectedPayName, setSelectedPayName] = useState("");
       const nameRef = useRef(null);
+      const hydratedFromUrl = useRef(false);
 
-      const load = () => {
+      const getCurrentEvent = () => {
         const all = db.get("atsumeru_events") || [];
-        setEv(all.find((e) => e.id === eventId) || null);
+        return all.find((e) => e.id === eventId) || null;
       };
+
+      const writeNameToUrl = (name) => {
+        const u = new URL(window.location.href);
+        u.searchParams.set("event", eventId);
+        u.searchParams.set("name", name);
+        window.history.replaceState({}, "", u.toString());
+      };
+
+      const load = () => setEv(getCurrentEvent());
+
       useEffect(() => {
         load();
         const onStorage = (e) => { if (e.key === "atsumeru_events") load(); };
@@ -591,9 +565,20 @@
         return () => { document.removeEventListener("visibilitychange", h); window.removeEventListener("focus", f); };
       }, [step]);
 
+      useEffect(() => {
+        if (hydratedFromUrl.current || !ev) return;
+        const n = (new URLSearchParams(window.location.search).get("name") || "").trim();
+        hydratedFromUrl.current = true;
+        if (!n) return;
+        const member = ev.members.find((m) => m.name === n);
+        if (!member) return;
+        setMyName(n);
+        if (ev.collecting && member.rsvp === "yes") setStep("rsvp_done");
+      }, [ev]);
+
       const submitRsvp = (rsvp) => {
         const name = nameRef.current?.value?.trim();
-        if (!name) { alert("名前を入力してください"); return; }
+        if (!name) { alert("名前を�E力してください"); return; }
         const all = db.get("atsumeru_events") || [];
         const updated = all.map((e) => {
           if (e.id !== eventId) return e;
@@ -602,14 +587,35 @@
           return { ...e, members: [...e.members, { id: genId(), name, rsvp, paid: false, paidAt: null }] };
         });
         db.set("atsumeru_events", updated);
+        const nextEv = updated.find((e) => e.id === eventId) || null;
+        if (!nextEv) { alert("イベントが見つかりません"); return; }
+        setEv(nextEv);
+        writeNameToUrl(name);
+        if (rsvp === "yes" && nextEv.collecting) { startPaymentFlow(name); return; }
         setMyName(name);
-        setEv(updated.find((e) => e.id === eventId));
         setStep("rsvp_done");
       };
 
+      const startPaymentFlow = (name) => {
+        const current = getCurrentEvent();
+        if (!current) return;
+        const member = current.members.find((m) => m.name === name);
+        if (!member || member.rsvp !== "yes") { alert("参加惁E��が見つかりません"); return; }
+        if (member.paid) { setMyName(name); setEv(current); setStep("rsvp_done"); return; }
+        writeNameToUrl(name);
+        setMyName(name);
+        setEv(current);
+        if (current.payUrl) {
+          setStep("paying");
+          setTimeout(() => { window.open(current.payUrl, "_blank"); }, 100);
+        } else {
+          setStep("confirm");
+        }
+      };
+
       const openPayLink = () => {
-        setStep("paying");
-        setTimeout(() => { window.open(ev.payUrl, "_blank"); }, 100);
+        if (!myName) return;
+        startPaymentFlow(myName);
       };
 
       const confirmPaid = () => {
@@ -624,20 +630,18 @@
         setStep("done");
       };
 
-      /* あとから支払い（名前選択式） */
-      const handlePayLaterBySelection = () => {
-        if (!selectedPayName) return;
-        const member = ev.members.find((m) => m.name === selectedPayName);
+      const handlePayLaterBySelection = (name) => {
+        if (!name) return;
+        const member = (ev?.members || []).find((m) => m.name === name);
         if (!member || member.rsvp !== "yes" || member.paid) return;
-        setMyName(selectedPayName);
-        if (ev.payUrl) { openPayLink(); } else { setStep("confirm"); }
+        writeNameToUrl(name);
+        startPaymentFlow(name);
       };
 
-      /* ヘッダー（参加者ページ共通） */
       const Header = () => (
         <div style={{ borderBottom: `1px solid ${C.border}`, background: C.surface, marginBottom: 24 }}>
           <div style={{ ...S.wrap, height: 52, display: "flex", alignItems: "center" }}>
-            <span style={{ fontSize: "0.9rem", fontWeight: 700, color: C.primary }}>アツメル</span>
+            <span style={{ fontSize: "0.9rem", fontWeight: 700, color: C.primary }}>アチE��ル</span>
           </div>
         </div>
       );
@@ -657,12 +661,10 @@
         <>
           <Header />
           <div style={{ ...S.wrap, paddingTop: 24, ...S.anim }}>
-            <div style={{ ...S.cardLg, textAlign: "center", padding: "44px 24px",
-              borderColor: C.success }}>
-              <div style={{ fontSize: "0.75rem", fontWeight: 700, color: C.success,
-                letterSpacing: "0.06em", marginBottom: 12 }}>完了</div>
+            <div style={{ ...S.cardLg, textAlign: "center", padding: "44px 24px", borderColor: C.success }}>
+              <div style={{ fontSize: "0.75rem", fontWeight: 700, color: C.success, letterSpacing: "0.06em", marginBottom: 12 }}>完亁E/div>
               <h2 style={{ ...S.h2, marginBottom: 8 }}>支払いを報告しました</h2>
-              <p style={S.sub}>幹事さんに反映されました。ありがとうございます。</p>
+              <p style={S.sub}>幹事に反映されました。ありがとぁE��ざいます、E/p>
             </div>
           </div>
         </>
@@ -673,14 +675,11 @@
           <Header />
           <div style={{ ...S.wrap, paddingTop: 24, ...S.anim }}>
             <div style={{ ...S.cardLg, textAlign: "center" }}>
-              <p style={{ fontSize: "0.75rem", fontWeight: 700, color: C.textMuted,
-                letterSpacing: "0.06em", marginBottom: 12 }}>確認</p>
-              <h2 style={{ ...S.h2, marginBottom: 8 }}>送金は完了しましたか？</h2>
-              <p style={{ ...S.sub, marginBottom: 28 }}>{myName}さんの支払いを記録します</p>
-              <button style={{ ...S.btn, ...S.btnSuccess, marginBottom: 10 }} onClick={confirmPaid}>
-                はい、送金しました
-              </button>
-              <button style={{ ...S.btn, ...S.btnGhost }} onClick={() => setStep("rsvp_done")}>まだしていない</button>
+              <p style={{ fontSize: "0.75rem", fontWeight: 700, color: C.textMuted, letterSpacing: "0.06em", marginBottom: 12 }}>確誁E/p>
+              <h2 style={{ ...S.h2, marginBottom: 8 }}>送E��は完亁E��ましたか！E/h2>
+              <p style={{ ...S.sub, marginBottom: 28 }}>{myName}さんの支払いを記録しまぁE/p>
+              <button style={{ ...S.btn, ...S.btnSuccess, marginBottom: 10 }} onClick={confirmPaid}>はぁE��E��E��しました</button>
+              <button style={{ ...S.btn, ...S.btnGhost }} onClick={() => setStep("rsvp_done")}>まだしてぁE��ぁE/button>
             </div>
           </div>
         </>
@@ -691,68 +690,57 @@
           <Header />
           <div style={{ ...S.wrap, paddingTop: 24, textAlign: "center", ...S.anim }}>
             <div style={S.cardLg}>
-              <div style={{ width: 36, height: 36, borderRadius: "50%",
-                border: `2px solid ${C.border}`, borderTopColor: C.primary,
-                animation: "spin 0.9s linear infinite", margin: "0 auto 20px" }} />
-              <h2 style={{ ...S.h2, marginBottom: 8 }}>送金アプリを開いています</h2>
-              <p style={{ ...S.sub, marginBottom: 24 }}>送金が終わったらこのページに戻ってきてください</p>
-              <button style={{ ...S.btn, ...S.btnGhost }} onClick={() => setStep("confirm")}>送金が終わった</button>
+              <div style={{ width: 36, height: 36, borderRadius: "50%", border: `2px solid ${C.border}`, borderTopColor: C.primary, animation: "spin 0.9s linear infinite", margin: "0 auto 20px" }} />
+              <h2 style={{ ...S.h2, marginBottom: 8 }}>送E��アプリを開ぁE��ぁE��ぁE/h2>
+              <p style={{ ...S.sub, marginBottom: 24 }}>送E��が終わったらこ�Eペ�Eジに戻ってください</p>
+              <button style={{ ...S.btn, ...S.btnGhost }} onClick={() => setStep("confirm")}>送E��が終わっぁE/button>
             </div>
           </div>
         </>
       );
 
       const yesMembers = ev.members.filter((m) => m.rsvp === "yes");
-      const myMember   = myName ? ev.members.find((m) => m.name === myName) : null;
+      const myMember = myName ? ev.members.find((m) => m.name === myName) : null;
 
-      /* 回答済み画面 */
       if (step === "rsvp_done") return (
         <>
           <Header />
           <div style={{ ...S.wrap, paddingBottom: 60, ...S.anim }}>
             <div style={S.cardLg}>
               <div style={{ textAlign: "center", marginBottom: 20 }}>
-                <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center",
-                  width: 40, height: 40, borderRadius: "50%", background: C.successBg,
-                  color: C.success, fontSize: "1rem", marginBottom: 12 }}>✓</div>
+                <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 40, height: 40, borderRadius: "50%", background: C.successBg, color: C.success, fontSize: "1rem", marginBottom: 12 }}>✁E/div>
                 <h2 style={{ ...S.h2, marginBottom: 4 }}>回答しました</h2>
-                <p style={{ fontSize: "0.8rem", color: C.textMuted }}>
-                  {myName}さん ／ {myMember?.rsvp === "yes" ? "参加" : myMember?.rsvp === "no" ? "不参加" : "未定"}
-                </p>
+                <p style={{ fontSize: "0.8rem", color: C.textMuted }}>{myName}さん �E�E{myMember?.rsvp === "yes" ? "参加" : myMember?.rsvp === "no" ? "不参加" : "未宁E}</p>
               </div>
 
               {ev.collecting && myMember?.rsvp === "yes" && !myMember?.paid && (
                 <div style={{ background: C.bg, borderRadius: C.radius, padding: 18, marginBottom: 4 }}>
                   <div style={{ textAlign: "center", marginBottom: 14 }}>
-                    <div style={{ fontSize: "1.5rem", fontWeight: 700, color: C.text, letterSpacing: "-0.02em" }}>
-                      ¥{ev.amount.toLocaleString()}
-                    </div>
-                    <p style={{ fontSize: "0.72rem", color: C.textMuted, marginTop: 2 }}>お支払い金額</p>
+                    <div style={{ fontSize: "1.5rem", fontWeight: 700, color: C.text, letterSpacing: "-0.02em" }}>¥{ev.amount.toLocaleString()}</div>
+                    <p style={{ fontSize: "0.72rem", color: C.textMuted, marginTop: 2 }}>お支払い金顁E/p>
                   </div>
                   {ev.payUrl
-                    ? <button style={{ ...S.btn, background: "#E00020", color: "#fff" }} onClick={openPayLink}>PayPayで送金する</button>
-                    : <button style={{ ...S.btn, ...S.btnPrimary }} onClick={() => setStep("confirm")}>送金したので報告する</button>
+                    ? <button style={{ ...S.btn, background: "#E00020", color: "#fff" }} onClick={openPayLink}>PayPayで送E��する</button>
+                    : <button style={{ ...S.btn, ...S.btnPrimary }} onClick={() => setStep("confirm")}>送E��したので報告すめE/button>
                   }
                 </div>
               )}
 
               {ev.collecting && myMember?.paid && (
                 <div style={{ background: C.successBg, borderRadius: C.radius, padding: 16, textAlign: "center", marginBottom: 4 }}>
-                  <span style={{ fontSize: "0.875rem", fontWeight: 600, color: C.success }}>支払い済みです</span>
+                  <span style={{ fontSize: "0.875rem", fontWeight: 600, color: C.success }}>支払い済みでぁE/span>
                 </div>
               )}
 
               {yesMembers.length > 0 && (
                 <div style={{ marginTop: 20, borderTop: `1px solid ${C.border}`, paddingTop: 16 }}>
-                  <p style={{ fontSize: "0.72rem", fontWeight: 700, color: C.textMuted,
-                    marginBottom: 8, letterSpacing: "0.03em" }}>参加者　{yesMembers.length}名</p>
+                  <p style={{ fontSize: "0.72rem", fontWeight: 700, color: C.textMuted, marginBottom: 8, letterSpacing: "0.03em" }}>参加老E��{yesMembers.length}吁E/p>
                   {yesMembers.map((m) => (
-                    <div key={m.id} style={{ display: "flex", alignItems: "center",
-                      justifyContent: "space-between", padding: "6px 0" }}>
+                    <div key={m.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "6px 0" }}>
                       <span style={{ fontSize: "0.85rem", color: C.text }}>{m.name}</span>
                       {ev.collecting && (
                         <span style={S.badge(m.paid ? C.successBg : C.warnBg, m.paid ? C.success : C.warn)}>
-                          {m.paid ? "済" : "未"}
+                          {m.paid ? "渁E : "未"}
                         </span>
                       )}
                     </div>
@@ -764,100 +752,67 @@
         </>
       );
 
-      /* 出欠回答フォーム */
       return (
         <>
           <Header />
           <div style={{ ...S.wrap, paddingBottom: 60, ...S.anim }}>
             <div style={S.cardLg}>
-              {/* イベント情報 */}
               <h2 style={{ ...S.h2, marginBottom: 4 }}>{ev.title}</h2>
-              <p style={{ fontSize: "0.78rem", color: C.textMuted, marginBottom: 2 }}>
-                {ev.date ? fmtDate(ev.date) : "日時未定"}{ev.place ? `　${ev.place}` : ""}
-              </p>
+              <p style={{ fontSize: "0.78rem", color: C.textMuted, marginBottom: 2 }}>{ev.date ? fmtDate(ev.date) : "日時未宁E}{ev.place ? `　${ev.place}` : ""}</p>
               {ev.note && <p style={{ fontSize: "0.78rem", color: C.textSub, marginTop: 4 }}>{ev.note}</p>}
 
               <div style={S.divider} />
 
-              {/* 出欠フォーム */}
-              <p style={{ fontWeight: 600, fontSize: "0.875rem", marginBottom: 14, color: C.text }}>出欠を回答する</p>
+              {/* 出欠を回答すめE*/}
+              <p style={{ fontWeight: 600, fontSize: "0.875rem", marginBottom: 14, color: C.text }}>出欠を回答すめE/p>
               <Field label="名前">
-                <input ref={nameRef} style={S.input} type="text" placeholder="お名前" defaultValue="" />
+                <input ref={nameRef} style={S.input} type="text" placeholder="お名剁E defaultValue="" />
               </Field>
-              <div style={{ display: "flex", gap: 8 }}>
+              <div className="rsvp-actions">
                 <button style={{ ...S.btn, ...S.btnSuccess, flex: 1 }} onClick={() => submitRsvp("yes")}>参加</button>
-                <button style={{ ...S.btn, ...S.btnWarn,   flex: 1 }} onClick={() => submitRsvp("maybe")}>未定</button>
+                <button style={{ ...S.btn, ...S.btnWarn,   flex: 1 }} onClick={() => submitRsvp("maybe")}>未宁E/button>
                 <button style={{ ...S.btn, ...S.btnDanger, flex: 1 }} onClick={() => submitRsvp("no")}>不参加</button>
               </div>
 
-              {/* あとから支払うセクション */}
+              {/* あとから支払う */}
               {ev.collecting && (() => {
                 const unpaid = ev.members.filter((m) => m.rsvp === "yes" && !m.paid);
                 if (unpaid.length === 0) return null;
                 return (
-                  <div style={{ marginTop: 20, padding: "16px", background: C.bg,
-                    borderRadius: C.radius, border: `1px solid ${C.border}` }}>
-                    <p style={{ fontSize: "0.75rem", fontWeight: 700, color: C.textSub, marginBottom: 2 }}>
-                      あとから支払う
-                    </p>
-                    <p style={{ fontSize: "0.72rem", color: C.textMuted, marginBottom: 12 }}>
-                      自分の名前を選んでください
-                    </p>
-                    <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 12 }}>
-                      {unpaid.map((m) => {
-                        const selected = selectedPayName === m.name;
-                        return (
-                          <button key={m.id} onClick={() => setSelectedPayName(selected ? "" : m.name)}
-                            style={{
-                              display: "flex", alignItems: "center", gap: 10,
-                              padding: "10px 12px", borderRadius: C.radiusSm,
-                              border: `1.5px solid ${selected ? C.primary : C.border}`,
-                              background: selected ? C.primaryBg : C.surface,
-                              cursor: "pointer", fontFamily: C.font, width: "100%", textAlign: "left",
-                              transition: "all 0.12s",
-                            }}>
-                            <div style={{
-                              width: 18, height: 18, borderRadius: "50%", flexShrink: 0,
-                              border: `2px solid ${selected ? C.primary : C.borderDark}`,
-                              background: selected ? C.primary : "transparent",
-                              display: "flex", alignItems: "center", justifyContent: "center",
-                              transition: "all 0.12s",
-                            }}>
-                              {selected && <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#fff" }} />}
-                            </div>
-                            <span style={{ fontSize: "0.875rem", color: C.text, fontWeight: selected ? 600 : 400 }}>
-                              {m.name}
-                            </span>
-                          </button>
-                        );
-                      })}
+                  <div style={{ marginTop: 20, padding: "16px", background: C.bg, borderRadius: C.radius, border: `1px solid ${C.border}` }}>
+                    <p style={{ fontSize: "0.75rem", fontWeight: 700, color: C.textSub, marginBottom: 2 }}>あとから支払う</p>
+                    <p style={{ fontSize: "0.72rem", color: C.textMuted, marginBottom: 12 }}>自刁E�E名前を選んでください</p>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                      {unpaid.map((m) => (
+                        <button key={m.id} onClick={() => handlePayLaterBySelection(m.name)} style={{
+                          display: "flex", alignItems: "center", gap: 10,
+                          padding: "10px 12px", borderRadius: C.radiusSm,
+                          border: `1.5px solid ${C.border}`,
+                          background: C.surface,
+                          cursor: "pointer", fontFamily: C.font, width: "100%", textAlign: "left",
+                          transition: "all 0.12s",
+                        }}>
+                          <div style={{ width: 18, height: 18, borderRadius: "50%", flexShrink: 0, border: `2px solid ${C.borderDark}`, background: "transparent", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.12s" }}>
+                            <div style={{ width: 6, height: 6, borderRadius: "50%", background: C.borderDark }} />
+                          </div>
+                          <span style={{ fontSize: "0.875rem", color: C.text, fontWeight: 500 }}>{m.name}</span>
+                        </button>
+                      ))}
                     </div>
-                    <button
-                      style={{
-                        ...S.btn,
-                        ...(selectedPayName ? S.btnPrimary : { background: C.border, color: C.textMuted, cursor: "default" }),
-                      }}
-                      onClick={handlePayLaterBySelection}
-                      disabled={!selectedPayName}>
-                      支払う（¥{ev.amount.toLocaleString()}）
-                    </button>
                   </div>
                 );
               })()}
 
-              {/* 回答状況 */}
               {ev.members.length > 0 && (
                 <div style={{ marginTop: 24, borderTop: `1px solid ${C.border}`, paddingTop: 16 }}>
-                  <p style={{ fontSize: "0.72rem", fontWeight: 700, color: C.textMuted,
-                    marginBottom: 8, letterSpacing: "0.03em" }}>回答状況　{ev.members.length}名</p>
+                  <p style={{ fontSize: "0.72rem", fontWeight: 700, color: C.textMuted, marginBottom: 8, letterSpacing: "0.03em" }}>回答状況　{ev.members.length}吁E/p>
                   {ev.members.map((m) => (
-                    <div key={m.id} style={{ display: "flex", alignItems: "center",
-                      justifyContent: "space-between", padding: "6px 0" }}>
+                    <div key={m.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "6px 0" }}>
                       <span style={{ fontSize: "0.85rem", color: C.text }}>{m.name}</span>
                       <span style={S.badge(
                         m.rsvp === "yes" ? C.successBg : m.rsvp === "no" ? C.dangerBg : C.warnBg,
-                        m.rsvp === "yes" ? C.success   : m.rsvp === "no" ? C.danger   : C.warn,
-                      )}>{m.rsvp === "yes" ? "参加" : m.rsvp === "no" ? "不参加" : "未定"}</span>
+                        m.rsvp === "yes" ? C.success : m.rsvp === "no" ? C.danger : C.warn,
+                      )}>{m.rsvp === "yes" ? "参加" : m.rsvp === "no" ? "不参加" : "未宁E}</span>
                     </div>
                   ))}
                 </div>
@@ -867,8 +822,6 @@
         </>
       );
     }
-
-    /* ── アプリルート ── */
     function App() {
       const [page, setPage]     = useState("home");
       const [pageArg, setPageArg] = useState(null);
@@ -905,3 +858,4 @@
   </script>
 </body>
 </html>
+
