@@ -8,6 +8,7 @@ type EventForm = {
   date: string;
   place: string;
   note: string;
+  collecting: boolean;
   amount: string;
   payUrl: string;
 };
@@ -19,6 +20,7 @@ export default function NewEventPage() {
     date: "",
     place: "",
     note: "",
+    collecting: true,
     amount: "",
     payUrl: "",
   });
@@ -48,7 +50,7 @@ export default function NewEventPage() {
           date: form.date || null,
           place: form.place.trim() || null,
           note: form.note.trim() || null,
-          collecting: false,
+          collecting: form.collecting,
           amount: Number(form.amount || 0),
           pay_url: form.payUrl.trim() || null,
         }),
@@ -72,7 +74,7 @@ export default function NewEventPage() {
     <main className="container">
       <div className="card">
         <h1 className="h1">イベント作成</h1>
-        <p className="hint">作成後に管理URLと参加者URLが使えるようになります。</p>
+        <p className="hint">作成後すぐ管理画面に移動します。出欠が0人でも先に集金設定できます。</p>
 
         <div className="stack" style={{ marginTop: 12 }}>
           <input
@@ -99,6 +101,16 @@ export default function NewEventPage() {
             value={form.note}
             onChange={(e) => setForm({ ...form, note: e.target.value })}
           />
+
+          <label className="row" style={{ minHeight: 44 }}>
+            <input
+              type="checkbox"
+              checked={form.collecting}
+              onChange={(e) => setForm({ ...form, collecting: e.target.checked })}
+            />
+            作成と同時に集金を開始する
+          </label>
+
           <input
             className="input"
             inputMode="numeric"
@@ -118,7 +130,7 @@ export default function NewEventPage() {
           )}
 
           <button className="btn btn-primary" onClick={submit} disabled={submitting}>
-            {submitting ? "作成中..." : "作成する"}
+            {submitting ? "作成中..." : "作成して管理画面へ"}
           </button>
         </div>
       </div>

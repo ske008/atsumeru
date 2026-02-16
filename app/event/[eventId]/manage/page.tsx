@@ -189,16 +189,8 @@ export default function ManagePage() {
         </section>
 
         <section className="card">
-          <h2 className="h2">共有</h2>
-          <p className="hint">参加者にこのURLを送ってください。</p>
-          <div className="row" style={{ marginTop: 10 }}>
-            <input className="input" value={participantUrl} readOnly />
-            <button className="btn btn-primary" onClick={copyParticipantUrl}>参加者URLをコピー</button>
-          </div>
-        </section>
-
-        <section className="card">
           <h2 className="h2">設定</h2>
+          <p className="hint">出欠が0件でも、ここで先に集金情報を設定できます。</p>
           <div className="stack" style={{ marginTop: 10 }}>
             <label className="row" style={{ minHeight: 44 }}>
               <input
@@ -228,10 +220,19 @@ export default function ManagePage() {
         </section>
 
         <section className="card">
+          <h2 className="h2">共有</h2>
+          <p className="hint">参加者にこのURLを送ってください。</p>
+          <div className="row" style={{ marginTop: 10 }}>
+            <input className="input" value={participantUrl} readOnly />
+            <button className="btn btn-primary" onClick={copyParticipantUrl}>参加者URLをコピー</button>
+          </div>
+        </section>
+
+        <section className="card">
           <h2 className="h2">回答一覧</h2>
           {responses.length === 0 && (
             <p className="status status-info" style={{ marginTop: 10 }}>
-              まだ回答はありません。参加者URLを共有してください。
+              まだ回答はありません。先に設定だけ完了して、参加者URLを共有してください。
             </p>
           )}
 
