@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabase";
+import { getSupabaseAdmin } from "@/lib/supabase";
 
 function randomToken() {
   return crypto.randomUUID().replace(/-/g, "");
@@ -11,16 +11,16 @@ export async function POST(req: NextRequest) {
     const title = typeof body.title === "string" ? body.title.trim() : "";
 
     if (!title) {
-      return NextResponse.json({ error: "ƒCƒxƒ“ƒg–¼‚ğ“ü—Í‚µ‚Ä‚­‚¾‚³‚¢B" }, { status: 400 });
+      return NextResponse.json({ error: "ã‚¤ãƒ™ãƒ³ãƒˆåã‚’å…¥åŠ›ã—ã¦ãã ã•ã„ã€‚" }, { status: 400 });
     }
 
     const amount = Number(body.amount ?? 0);
     if (Number.isNaN(amount) || amount < 0) {
-      return NextResponse.json({ error: "‹àŠz‚Í0ˆÈã‚Ì”š‚Å“ü—Í‚µ‚Ä‚­‚¾‚³‚¢B" }, { status: 400 });
+      return NextResponse.json({ error: "é‡‘é¡ã¯0ä»¥ä¸Šã®æ•°å­—ã§å…¥åŠ›ã—ã¦ãã ã•ã„ã€‚" }, { status: 400 });
     }
 
     const ownerToken = randomToken();
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await getSupabaseAdmin()
       .from("events")
       .insert({
         title,
@@ -36,11 +36,11 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (error) {
-      return NextResponse.json({ error: "ƒCƒxƒ“ƒgì¬‚É¸”s‚µ‚Ü‚µ‚½B" }, { status: 500 });
+      return NextResponse.json({ error: "ã‚¤ãƒ™ãƒ³ãƒˆä½œæˆã«å¤±æ•—ã—ã¾ã—ãŸã€‚" }, { status: 500 });
     }
 
     return NextResponse.json({ eventId: data.id, ownerToken });
   } catch {
-    return NextResponse.json({ error: "•s³‚ÈƒŠƒNƒGƒXƒg‚Å‚·B" }, { status: 400 });
+    return NextResponse.json({ error: "ä¸æ­£ãªãƒªã‚¯ã‚¨ã‚¹ãƒˆã§ã™ã€‚" }, { status: 400 });
   }
 }

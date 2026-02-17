@@ -1,38 +1,38 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabase";
+import { getSupabaseAdmin } from "@/lib/supabase";
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string; responseId: string } }) {
   const token = req.nextUrl.searchParams.get("token");
   if (!token) {
-    return NextResponse.json({ error: "ŠÇ—ƒg[ƒNƒ“‚ª•K—v‚Å‚·B" }, { status: 401 });
+    return NextResponse.json({ error: "ç®¡ç†ãƒˆãƒ¼ã‚¯ãƒ³ãŒå¿…è¦ã§ã™ã€‚" }, { status: 401 });
   }
 
   let body: Record<string, unknown>;
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: "•s³‚ÈƒŠƒNƒGƒXƒg‚Å‚·B" }, { status: 400 });
+    return NextResponse.json({ error: "ä¸æ­£ãªãƒªã‚¯ã‚¨ã‚¹ãƒˆã§ã™ã€‚" }, { status: 400 });
   }
 
   if (typeof body.paid !== "boolean") {
-    return NextResponse.json({ error: "x•¥‚¢ó‘Ô‚ª•s³‚Å‚·B" }, { status: 400 });
+    return NextResponse.json({ error: "æ”¯æ‰•ã„çŠ¶æ…‹ãŒä¸æ­£ã§ã™ã€‚" }, { status: 400 });
   }
 
-  const { data: event, error: eventError } = await supabaseAdmin
+  const { data: event, error: eventError } = await getSupabaseAdmin()
     .from("events")
     .select("owner_token")
     .eq("id", params.id)
     .single();
 
   if (eventError || !event) {
-    return NextResponse.json({ error: "ƒCƒxƒ“ƒg‚ªŒ©‚Â‚©‚è‚Ü‚¹‚ñB" }, { status: 404 });
+    return NextResponse.json({ error: "ã‚¤ãƒ™ãƒ³ãƒˆãŒè¦‹ã¤ã‹ã‚Šã¾ã›ã‚“ã€‚" }, { status: 404 });
   }
 
   if (event.owner_token !== token) {
-    return NextResponse.json({ error: "ŠÇ—Ò‚Æ‚µ‚Ä”FØ‚Å‚«‚Ü‚¹‚ñ‚Å‚µ‚½B" }, { status: 403 });
+    return NextResponse.json({ error: "ç®¡ç†è€…ã¨ã—ã¦èªè¨¼ã§ãã¾ã›ã‚“ã§ã—ãŸã€‚" }, { status: 403 });
   }
 
-  const { data, error } = await supabaseAdmin
+  const { data, error } = await getSupabaseAdmin()
     .from("responses")
     .update({
       paid: body.paid,
@@ -45,7 +45,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     .single();
 
   if (error) {
-    return NextResponse.json({ error: "x•¥‚¢ó‘Ô‚ğXV‚Å‚«‚Ü‚¹‚ñ‚Å‚µ‚½B" }, { status: 500 });
+    return NextResponse.json({ error: "æ”¯æ‰•ã„çŠ¶æ…‹ã‚’æ›´æ–°ã§ãã¾ã›ã‚“ã§ã—ãŸã€‚" }, { status: 500 });
   }
 
   return NextResponse.json(data);

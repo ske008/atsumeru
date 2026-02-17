@@ -4,13 +4,13 @@ export default function NotFound() {
   return (
     <main className="container">
       <div className="card">
-        <h1 className="h1">ƒy[ƒW‚ªŒ©‚Â‚©‚è‚Ü‚¹‚ñ</h1>
+        <h1 className="h1">ãƒšãƒ¼ã‚¸ãŒè¦‹ã¤ã‹ã‚Šã¾ã›ã‚“</h1>
         <p className="hint" style={{ marginTop: 10 }}>
-          URL‚ªŒÃ‚¢‰Â”\«‚ª‚ ‚è‚Ü‚·Bƒgƒbƒv‚©‚çƒCƒxƒ“ƒg‚ðŠJ‚«’¼‚µ‚Ä‚­‚¾‚³‚¢B
+          URLãŒå¤ã„å¯èƒ½æ€§ãŒã‚ã‚Šã¾ã™ã€‚ãƒˆãƒƒãƒ—ã‹ã‚‰ã‚¤ãƒ™ãƒ³ãƒˆã‚’é–‹ãç›´ã—ã¦ãã ã•ã„ã€‚
         </p>
         <div style={{ marginTop: 12 }}>
           <Link href="/">
-            <button className="btn btn-primary">ƒgƒbƒv‚Ö–ß‚é</button>
+            <button className="btn btn-primary">ãƒˆãƒƒãƒ—ã¸æˆ»ã‚‹</button>
           </Link>
         </div>
       </div>

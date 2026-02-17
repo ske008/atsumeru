@@ -29,9 +29,9 @@ type UiStatus = {
 };
 
 const RSVP_LABEL: Record<ResponseRow["rsvp"], string> = {
-  yes: "Q‰Á",
-  maybe: "–¢’è",
-  no: "•sQ‰Á",
+  yes: "å‚åŠ ",
+  maybe: "æœªå®š",
+  no: "ä¸å‚åŠ ",
 };
 
 export default function ManagePage() {
@@ -51,13 +51,13 @@ export default function ManagePage() {
   }, [params.eventId]);
 
   const loadAll = async () => {
-    setStatus({ kind: "info", message: "“Ç‚İ‚İ’†‚Å‚·..." });
+    setStatus({ kind: "info", message: "èª­ã¿è¾¼ã¿ä¸­ã§ã™..." });
 
     try {
       const eventRes = await fetch(`/api/events/${params.eventId}`);
       const eventData = await eventRes.json();
       if (!eventRes.ok) {
-        setStatus({ kind: "error", message: eventData.error || "ƒCƒxƒ“ƒgî•ñ‚ğæ“¾‚Å‚«‚Ü‚¹‚ñB" });
+        setStatus({ kind: "error", message: eventData.error || "ã‚¤ãƒ™ãƒ³ãƒˆæƒ…å ±ã‚’å–å¾—ã§ãã¾ã›ã‚“ã€‚" });
         return;
       }
 
@@ -69,21 +69,21 @@ export default function ManagePage() {
       });
 
       if (!token) {
-        setStatus({ kind: "error", message: "ŠÇ—URL‚ª•sŠ®‘S‚Å‚·Btoken•t‚«URL‚ğŠJ‚¢‚Ä‚­‚¾‚³‚¢B" });
+        setStatus({ kind: "error", message: "ç®¡ç†URLãŒä¸å®Œå…¨ã§ã™ã€‚tokenä»˜ãURLã‚’é–‹ã„ã¦ãã ã•ã„ã€‚" });
         return;
       }
 
       const responseRes = await fetch(`/api/events/${params.eventId}/responses?token=${token}`);
       const responseData = await responseRes.json();
       if (!responseRes.ok) {
-        setStatus({ kind: "error", message: responseData.error || "‰ñ“šˆê——‚ğæ“¾‚Å‚«‚Ü‚¹‚ñB" });
+        setStatus({ kind: "error", message: responseData.error || "å›ç­”ä¸€è¦§ã‚’å–å¾—ã§ãã¾ã›ã‚“ã€‚" });
         return;
       }
 
       setResponses(responseData.responses || []);
       setStatus(null);
     } catch {
-      setStatus({ kind: "error", message: "’ÊMƒGƒ‰[‚ª”­¶‚µ‚Ü‚µ‚½BŠÔ‚ğ‚¨‚¢‚ÄÄs‚µ‚Ä‚­‚¾‚³‚¢B" });
+      setStatus({ kind: "error", message: "é€šä¿¡ã‚¨ãƒ©ãƒ¼ãŒç™ºç”Ÿã—ã¾ã—ãŸã€‚æ™‚é–“ã‚’ãŠã„ã¦å†è©¦è¡Œã—ã¦ãã ã•ã„ã€‚" });
     }
   };
 
@@ -95,20 +95,20 @@ export default function ManagePage() {
     if (!participantUrl) return;
     try {
       await navigator.clipboard.writeText(participantUrl);
-      setStatus({ kind: "success", message: "Q‰ÁÒURL‚ğƒRƒs[‚µ‚Ü‚µ‚½B" });
+      setStatus({ kind: "success", message: "å‚åŠ è€…URLã‚’ã‚³ãƒ”ãƒ¼ã—ã¾ã—ãŸã€‚" });
     } catch {
-      setStatus({ kind: "error", message: "ƒRƒs[‚É¸”s‚µ‚Ü‚µ‚½Bè“®‚ÅURL‚ğ‘I‘ğ‚µ‚ÄƒRƒs[‚µ‚Ä‚­‚¾‚³‚¢B" });
+      setStatus({ kind: "error", message: "ã‚³ãƒ”ãƒ¼ã«å¤±æ•—ã—ã¾ã—ãŸã€‚æ‰‹å‹•ã§URLã‚’é¸æŠã—ã¦ã‚³ãƒ”ãƒ¼ã—ã¦ãã ã•ã„ã€‚" });
     }
   };
 
   const saveCollecting = async () => {
     if (!token) {
-      setStatus({ kind: "error", message: "ŠÇ—URL‚ª•sŠ®‘S‚Å‚·Btoken•t‚«URL‚ğŠJ‚¢‚Ä‚­‚¾‚³‚¢B" });
+      setStatus({ kind: "error", message: "ç®¡ç†URLãŒä¸å®Œå…¨ã§ã™ã€‚tokenä»˜ãURLã‚’é–‹ã„ã¦ãã ã•ã„ã€‚" });
       return;
     }
 
     if (form.amount && Number.isNaN(Number(form.amount))) {
-      setStatus({ kind: "error", message: "‹àŠz‚Í”š‚Å“ü—Í‚µ‚Ä‚­‚¾‚³‚¢B" });
+      setStatus({ kind: "error", message: "é‡‘é¡ã¯æ•°å­—ã§å…¥åŠ›ã—ã¦ãã ã•ã„ã€‚" });
       return;
     }
 
@@ -128,14 +128,14 @@ export default function ManagePage() {
 
       const data = await res.json();
       if (!res.ok) {
-        setStatus({ kind: "error", message: data.error || "W‹àİ’è‚ğXV‚Å‚«‚Ü‚¹‚ñ‚Å‚µ‚½B" });
+        setStatus({ kind: "error", message: data.error || "é›†é‡‘è¨­å®šã‚’æ›´æ–°ã§ãã¾ã›ã‚“ã§ã—ãŸã€‚" });
         return;
       }
 
       setEvent((prev) => (prev ? { ...prev, collecting: data.collecting, amount: data.amount, pay_url: data.pay_url } : prev));
-      setStatus({ kind: "success", message: "W‹àİ’è‚ğXV‚µ‚Ü‚µ‚½B" });
+      setStatus({ kind: "success", message: "é›†é‡‘è¨­å®šã‚’æ›´æ–°ã—ã¾ã—ãŸã€‚" });
     } catch {
-      setStatus({ kind: "error", message: "’ÊMƒGƒ‰[‚ª”­¶‚µ‚Ü‚µ‚½BŠÔ‚ğ‚¨‚¢‚ÄÄs‚µ‚Ä‚­‚¾‚³‚¢B" });
+      setStatus({ kind: "error", message: "é€šä¿¡ã‚¨ãƒ©ãƒ¼ãŒç™ºç”Ÿã—ã¾ã—ãŸã€‚æ™‚é–“ã‚’ãŠã„ã¦å†è©¦è¡Œã—ã¦ãã ã•ã„ã€‚" });
     } finally {
       setSavingSetting(false);
     }
@@ -143,7 +143,7 @@ export default function ManagePage() {
 
   const togglePaid = async (row: ResponseRow) => {
     if (!token) {
-      setStatus({ kind: "error", message: "ŠÇ—URL‚ª•sŠ®‘S‚Å‚·Btoken•t‚«URL‚ğŠJ‚¢‚Ä‚­‚¾‚³‚¢B" });
+      setStatus({ kind: "error", message: "ç®¡ç†URLãŒä¸å®Œå…¨ã§ã™ã€‚tokenä»˜ãURLã‚’é–‹ã„ã¦ãã ã•ã„ã€‚" });
       return;
     }
 
@@ -156,14 +156,14 @@ export default function ManagePage() {
       const data = await res.json();
 
       if (!res.ok) {
-        setStatus({ kind: "error", message: data.error || "x•¥‚¢ó‘Ô‚ğXV‚Å‚«‚Ü‚¹‚ñ‚Å‚µ‚½B" });
+        setStatus({ kind: "error", message: data.error || "æ”¯æ‰•ã„çŠ¶æ…‹ã‚’æ›´æ–°ã§ãã¾ã›ã‚“ã§ã—ãŸã€‚" });
         return;
       }
 
       setResponses((prev) => prev.map((item) => (item.id === row.id ? { ...item, paid: data.paid, paid_at: data.paid_at } : item)));
-      setStatus({ kind: "success", message: data.paid ? "x•¥‚¢Ï‚İ‚É‚µ‚Ü‚µ‚½B" : "–¢•¥‚¢‚É–ß‚µ‚Ü‚µ‚½B" });
+      setStatus({ kind: "success", message: data.paid ? "æ”¯æ‰•ã„æ¸ˆã¿ã«ã—ã¾ã—ãŸã€‚" : "æœªæ‰•ã„ã«æˆ»ã—ã¾ã—ãŸã€‚" });
     } catch {
-      setStatus({ kind: "error", message: "’ÊMƒGƒ‰[‚ª”­¶‚µ‚Ü‚µ‚½BŠÔ‚ğ‚¨‚¢‚ÄÄs‚µ‚Ä‚­‚¾‚³‚¢B" });
+      setStatus({ kind: "error", message: "é€šä¿¡ã‚¨ãƒ©ãƒ¼ãŒç™ºç”Ÿã—ã¾ã—ãŸã€‚æ™‚é–“ã‚’ãŠã„ã¦å†è©¦è¡Œã—ã¦ãã ã•ã„ã€‚" });
     }
   };
 
@@ -173,24 +173,24 @@ export default function ManagePage() {
         <section className="card">
           <div className="row-between">
             <div>
-              <h1 className="h1">{event?.title || "ƒCƒxƒ“ƒgŠÇ—"}</h1>
-              <p className="hint">‚±‚Ìƒy[ƒW‚ÅW‹àó‹µ‚ğŠÇ—‚µ‚Ü‚·B</p>
+              <h1 className="h1">{event?.title || "ã‚¤ãƒ™ãƒ³ãƒˆç®¡ç†"}</h1>
+              <p className="hint">ã“ã®ãƒšãƒ¼ã‚¸ã§é›†é‡‘çŠ¶æ³ã‚’ç®¡ç†ã—ã¾ã™ã€‚</p>
             </div>
             <Link href={`/event/${params.eventId}`}>
-              <button className="btn btn-ghost">Q‰ÁÒƒy[ƒW‚ğŒ©‚é</button>
+              <button className="btn btn-ghost">å‚åŠ è€…ãƒšãƒ¼ã‚¸ã‚’è¦‹ã‚‹</button>
             </Link>
           </div>
           {event && (
             <p className="hint" style={{ marginTop: 8 }}>
-              {event.date || "“ú–¢’è"}
+              {event.date || "æ—¥æ™‚æœªå®š"}
               {event.place ? ` / ${event.place}` : ""}
             </p>
           )}
         </section>
 
         <section className="card">
-          <h2 className="h2">İ’è</h2>
-          <p className="hint">oŒ‡‚ª0Œ‚Å‚àA‚±‚±‚Åæ‚ÉW‹àî•ñ‚ğİ’è‚Å‚«‚Ü‚·B</p>
+          <h2 className="h2">è¨­å®š</h2>
+          <p className="hint">å‡ºæ¬ ãŒ0ä»¶ã§ã‚‚ã€ã“ã“ã§å…ˆã«é›†é‡‘æƒ…å ±ã‚’è¨­å®šã§ãã¾ã™ã€‚</p>
           <div className="stack" style={{ marginTop: 10 }}>
             <label className="row" style={{ minHeight: 44 }}>
               <input
@@ -198,41 +198,41 @@ export default function ManagePage() {
                 checked={form.collecting}
                 onChange={(e) => setForm((prev) => ({ ...prev, collecting: e.target.checked }))}
               />
-              W‹à‚ğŠJn‚·‚é
+              é›†é‡‘ã‚’é–‹å§‹ã™ã‚‹
             </label>
             <input
               className="input"
               inputMode="numeric"
-              placeholder="‹àŠzi‰~j"
+              placeholder="é‡‘é¡ï¼ˆå††ï¼‰"
               value={form.amount}
               onChange={(e) => setForm((prev) => ({ ...prev, amount: e.target.value }))}
             />
             <input
               className="input"
-              placeholder="‘—‹àURLi”CˆÓj"
+              placeholder="é€é‡‘URLï¼ˆä»»æ„ï¼‰"
               value={form.payUrl}
               onChange={(e) => setForm((prev) => ({ ...prev, payUrl: e.target.value }))}
             />
             <button className="btn btn-primary" onClick={saveCollecting} disabled={savingSetting}>
-              {savingSetting ? "XV’†..." : "İ’è‚ğXV‚·‚é"}
+              {savingSetting ? "æ›´æ–°ä¸­..." : "è¨­å®šã‚’æ›´æ–°ã™ã‚‹"}
             </button>
           </div>
         </section>
 
         <section className="card">
-          <h2 className="h2">‹¤—L</h2>
-          <p className="hint">Q‰ÁÒ‚É‚±‚ÌURL‚ğ‘—‚Á‚Ä‚­‚¾‚³‚¢B</p>
+          <h2 className="h2">å…±æœ‰</h2>
+          <p className="hint">å‚åŠ è€…ã«ã“ã®URLã‚’é€ã£ã¦ãã ã•ã„ã€‚</p>
           <div className="row" style={{ marginTop: 10 }}>
             <input className="input" value={participantUrl} readOnly />
-            <button className="btn btn-primary" onClick={copyParticipantUrl}>Q‰ÁÒURL‚ğƒRƒs[</button>
+            <button className="btn btn-primary" onClick={copyParticipantUrl}>å‚åŠ è€…URLã‚’ã‚³ãƒ”ãƒ¼</button>
           </div>
         </section>
 
         <section className="card">
-          <h2 className="h2">‰ñ“šˆê——</h2>
+          <h2 className="h2">å›ç­”ä¸€è¦§</h2>
           {responses.length === 0 && (
             <p className="status status-info" style={{ marginTop: 10 }}>
-              ‚Ü‚¾‰ñ“š‚Í‚ ‚è‚Ü‚¹‚ñBæ‚Éİ’è‚¾‚¯Š®—¹‚µ‚ÄAQ‰ÁÒURL‚ğ‹¤—L‚µ‚Ä‚­‚¾‚³‚¢B
+              ã¾ã å›ç­”ã¯ã‚ã‚Šã¾ã›ã‚“ã€‚å…ˆã«è¨­å®šã ã‘å®Œäº†ã—ã¦ã€å‚åŠ è€…URLã‚’å…±æœ‰ã—ã¦ãã ã•ã„ã€‚
             </p>
           )}
 
@@ -246,12 +246,12 @@ export default function ManagePage() {
                   </div>
                   {form.collecting ? (
                     row.paid ? (
-                      <button className="btn btn-primary" onClick={() => togglePaid(row)}>–¢•¥‚¢‚É–ß‚·</button>
+                      <button className="btn btn-primary" onClick={() => togglePaid(row)}>æœªæ‰•ã„ã«æˆ»ã™</button>
                     ) : (
-                      <button className="btn btn-ghost" onClick={() => togglePaid(row)}>x•¥‚¢Ï‚İ‚É‚·‚é</button>
+                      <button className="btn btn-ghost" onClick={() => togglePaid(row)}>æ”¯æ‰•ã„æ¸ˆã¿ã«ã™ã‚‹</button>
                     )
                   ) : (
-                    <span className="badge">W‹à–¢ŠJn</span>
+                    <span className="badge">é›†é‡‘æœªé–‹å§‹</span>
                   )}
                 </div>
               ))}
@@ -260,7 +260,7 @@ export default function ManagePage() {
 
           {!form.collecting && responses.length > 0 && (
             <p className="status status-warn" style={{ marginTop: 10 }}>
-              W‹à‚ğŠJn‚·‚é‚ÆÏ/–¢‚ğØ‚è‘Ö‚¦‚Å‚«‚Ü‚·B
+              é›†é‡‘ã‚’é–‹å§‹ã™ã‚‹ã¨æ¸ˆ/æœªã‚’åˆ‡ã‚Šæ›¿ãˆã§ãã¾ã™ã€‚
             </p>
           )}
         </section>

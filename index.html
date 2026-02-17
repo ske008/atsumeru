@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>アチE��ル</title>
+  <title>繧｢繝・Γ繝ｫ</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet" />
   <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
@@ -24,7 +24,7 @@
   </style>
 </head>
 <body>
-  <div style='padding:8px 12px;background:#e6f5ee;border-bottom:1px solid #b7e1cb;font-family:sans-serif;font-size:14px;'>�V�ł͂�����: <a href='/' style='color:#0b4f32;font-weight:700;'>Next�ł��J��</a></div>
+  <div style='padding:8px 12px;background:#e6f5ee;border-bottom:1px solid #b7e1cb;font-family:sans-serif;font-size:14px;'>新版はこちら: <a href='/' style='color:#0b4f32;font-weight:700;'>Next版を開く</a></div>
   <div id="root"></div>
 
   <script type="text/babel">
@@ -38,7 +38,7 @@
       set: (k, v) => localStorage.setItem(k, JSON.stringify(v)),
     };
 
-    /* ── チE��イント�Eクン ── */
+    /* 笏笏 繝・じ繧､繝ｳ繝医・繧ｯ繝ｳ 笏笏 */
     const C = {
       bg:          "#F5F4F1",
       surface:     "#FFFFFF",
@@ -48,7 +48,7 @@
       textSub:     "#6B6B67",
       textMuted:   "#A0A09C",
 
-      primary:     "#2D5A3D",   /* 深緁E*/
+      primary:     "#2D5A3D",   /* 豺ｱ邱・*/
       primaryBg:   "#EEF4F0",
       primaryText: "#1A3D28",
 
@@ -70,7 +70,7 @@
       radiusLg: "12px",
     };
 
-    /* ── 共通スタイル ── */
+    /* 笏笏 蜈ｱ騾壹せ繧ｿ繧､繝ｫ 笏笏 */
     const S = {
       wrap:    {
         maxWidth: 480, margin: "0 auto", width: "100%",
@@ -80,7 +80,7 @@
       card:    { background: C.surface, borderRadius: C.radiusLg, border: `1px solid ${C.border}`, padding: "20px" },
       cardLg:  { background: C.surface, borderRadius: C.radiusLg, border: `1px solid ${C.border}`, padding: "28px 24px" },
 
-      /* ボタン */
+      /* 繝懊ち繝ｳ */
       btn:    { display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6,
                 padding: "11px 20px", borderRadius: C.radius, fontSize: "0.875rem", fontWeight: 600,
                 border: "none", cursor: "pointer", fontFamily: C.font, width: "100%",
@@ -92,7 +92,7 @@
       btnWarn:    { background: "#D97706", color: "#fff" },
       btnSm:      { padding: "7px 14px", fontSize: "0.8rem", width: "auto" },
 
-      /* フォーム */
+      /* 繝輔か繝ｼ繝 */
       input:  { width: "100%", padding: "10px 12px", borderRadius: C.radiusSm,
                 border: `1px solid ${C.border}`, fontSize: "0.9rem",
                 fontFamily: C.font, background: C.bg, outline: "none",
@@ -101,12 +101,12 @@
       label:  { display: "block", fontSize: "0.75rem", fontWeight: 600,
                 color: C.textSub, marginBottom: 5, letterSpacing: "0.03em" },
 
-      /* チE��スチE*/
+      /* 繝・く繧ｹ繝・*/
       h1: { fontSize: "1.65rem", fontWeight: 700, letterSpacing: "-0.02em", lineHeight: 1.25, color: C.text },
       h2: { fontSize: "1.05rem", fontWeight: 700, letterSpacing: "-0.01em", color: C.text },
       sub: { fontSize: "0.83rem", color: C.textSub, lineHeight: 1.65 },
 
-      /* バッジ */
+      /* 繝舌ャ繧ｸ */
       badge: (bg, color) => ({
         display: "inline-flex", alignItems: "center", padding: "2px 10px",
         borderRadius: 100, fontSize: "0.7rem", fontWeight: 600,
@@ -125,19 +125,19 @@
       </div>
     );
 
-    /* ── ナビゲーション ── */
+    /* 笏笏 繝翫ン繧ｲ繝ｼ繧ｷ繝ｧ繝ｳ 笏笏 */
     function Nav({ goHome, user, logout }) {
       return (
         <div style={{ borderBottom: `1px solid ${C.border}`, background: C.surface }}>
           <div style={{ ...S.wrap, display: "flex", alignItems: "center", justifyContent: "space-between", height: 52 }}>
             <button onClick={goHome} style={{ fontSize: "0.95rem", fontWeight: 700, color: C.primary,
               background: "none", border: "none", fontFamily: C.font, cursor: "pointer", letterSpacing: "-0.01em" }}>
-              アチE��ル
+              繧｢繝・Γ繝ｫ
             </button>
             {user && (
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <span style={{ fontSize: "0.72rem", color: C.textMuted }}>{user}</span>
-                <button onClick={logout} style={{ ...S.btn, ...S.btnGhost, ...S.btnSm }}>ログアウチE/button>
+                <button onClick={logout} style={{ ...S.btn, ...S.btnGhost, ...S.btnSm }}>繝ｭ繧ｰ繧｢繧ｦ繝・/button>
               </div>
             )}
           </div>
@@ -145,35 +145,35 @@
       );
     }
 
-    /* ── ホ�Eム ── */
+    /* 笏笏 繝帙・繝 笏笏 */
     function Home({ go, user }) {
       return (
         <div style={{ ...S.wrap, paddingTop: 48, paddingBottom: 80, ...S.anim }}>
           <div style={{ marginBottom: 40 }}>
             <h1 style={{ ...S.h1, marginBottom: 12 }}>
-              出欠も集金も、Ebr />これひとつで、E
+              蜃ｺ谺繧る寔驥代ｂ縲・br />縺薙ｌ縺ｲ縺ｨ縺､縺ｧ縲・
             </h1>
             <p style={{ ...S.sub, maxWidth: 300 }}>
-              イベントを作ってURLを�E有するだけ、Ebr />出欠確認から集金まで一括管琁E��きます、E
+              繧､繝吶Φ繝医ｒ菴懊▲縺ｦURL繧貞・譛峨☆繧九□縺代・br />蜃ｺ谺遒ｺ隱阪°繧蛾寔驥代∪縺ｧ荳諡ｬ邂｡逅・〒縺阪∪縺吶・
             </p>
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 10, maxWidth: 300, marginBottom: 52 }}>
             <button style={{ ...S.btn, ...S.btnPrimary }} onClick={() => go(user ? "create" : "login")}>
-              イベントをつくる
+              繧､繝吶Φ繝医ｒ縺､縺上ｋ
             </button>
             <button style={{ ...S.btn, ...S.btnGhost }} onClick={() => go(user ? "list" : "login")}>
-              マイイベンチE
+              繝槭う繧､繝吶Φ繝・
             </button>
           </div>
 
           <div>
             <p style={{ fontSize: "0.7rem", fontWeight: 700, color: C.textMuted, marginBottom: 14,
-              letterSpacing: "0.08em", textTransform: "uppercase" }}>使ぁE��</p>
+              letterSpacing: "0.08em", textTransform: "uppercase" }}>菴ｿ縺・婿</p>
             {[
-              { step: "1", t: "イベントを作�E", d: "タイトルと日時だけでOK" },
-              { step: "2", t: "URLを�E朁E, d: "参加老E��そ�Eまま出欠回筁E },
-              { step: "3", t: "雁E��を管琁E, d: "支払い状況をひとめで確誁E },
+              { step: "1", t: "繧､繝吶Φ繝医ｒ菴懈・", d: "繧ｿ繧､繝医Ν縺ｨ譌･譎ゅ□縺代〒OK" },
+              { step: "2", t: "URL繧貞・譛・, d: "蜿ょ刈閠・′縺昴・縺ｾ縺ｾ蜃ｺ谺蝗樒ｭ・ },
+              { step: "3", t: "髮・≡繧堤ｮ｡逅・, d: "謾ｯ謇輔＞迥ｶ豕√ｒ縺ｲ縺ｨ繧√〒遒ｺ隱・ },
             ].map((x) => (
               <div key={x.step} style={{ display: "flex", alignItems: "flex-start", gap: 14,
                 padding: "14px 0", borderBottom: `1px solid ${C.border}` }}>
@@ -191,7 +191,7 @@
       );
     }
 
-    /* ── ログイン ── */
+    /* 笏笏 繝ｭ繧ｰ繧､繝ｳ 笏笏 */
     function Login({ go, setUser }) {
       const ref = useRef(null);
       const [ok, setOk] = useState(false);
@@ -208,23 +208,23 @@
       return (
         <div style={{ ...S.wrap, paddingTop: 48, ...S.anim }}>
           <div style={S.cardLg}>
-            <h2 style={{ ...S.h2, marginBottom: 4 }}>ログイン</h2>
-            <p style={{ ...S.sub, marginBottom: 24 }}>メールアドレスだけで利用できまぁE/p>
+            <h2 style={{ ...S.h2, marginBottom: 4 }}>繝ｭ繧ｰ繧､繝ｳ</h2>
+            <p style={{ ...S.sub, marginBottom: 24 }}>繝｡繝ｼ繝ｫ繧｢繝峨Ξ繧ｹ縺縺代〒蛻ｩ逕ｨ縺ｧ縺阪∪縺・/p>
             {ok ? (
               <div style={{ textAlign: "center", padding: "24px 0", background: C.successBg,
                 borderRadius: C.radius, color: C.success, fontWeight: 600 }}>
-                ログインしました
+                繝ｭ繧ｰ繧､繝ｳ縺励∪縺励◆
               </div>
             ) : (
               <>
-                <Field label="メールアドレス">
+                <Field label="繝｡繝ｼ繝ｫ繧｢繝峨Ξ繧ｹ">
                   <input ref={ref} style={{ ...S.input, borderColor: err ? C.danger : C.border }}
                     type="email" inputMode="email" autoCapitalize="none"
                     autoCorrect="off" spellCheck={false} placeholder="you@example.com" defaultValue=""
                     onKeyDown={(e) => e.key === "Enter" && handle()} />
-                  {err && <p style={{ fontSize: "0.72rem", color: C.danger, marginTop: 4 }}>正しいメールアドレスを�E力してください</p>}
+                  {err && <p style={{ fontSize: "0.72rem", color: C.danger, marginTop: 4 }}>豁｣縺励＞繝｡繝ｼ繝ｫ繧｢繝峨Ξ繧ｹ繧貞・蜉帙＠縺ｦ縺上□縺輔＞</p>}
                 </Field>
-                <button style={{ ...S.btn, ...S.btnPrimary }} onClick={handle}>ログイン</button>
+                <button style={{ ...S.btn, ...S.btnPrimary }} onClick={handle}>繝ｭ繧ｰ繧､繝ｳ</button>
               </>
             )}
           </div>
@@ -232,7 +232,7 @@
       );
     }
 
-    /* ── イベント作�E ── */
+    /* 笏笏 繧､繝吶Φ繝井ｽ懈・ 笏笏 */
     function Create({ go, user }) {
       const titleRef = useRef(null);
       const dateRef   = useRef(null);
@@ -261,48 +261,48 @@
       return (
         <div style={{ ...S.wrap, paddingTop: 28, paddingBottom: 80, ...S.anim }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
-            <button style={{ ...S.btn, ...S.btnGhost, ...S.btnSm }} onClick={() => go("list")}>ↁE戻めE/button>
-            <h2 style={S.h2}>イベントを作�E</h2>
+            <button style={{ ...S.btn, ...S.btnGhost, ...S.btnSm }} onClick={() => go("list")}>竊・謌ｻ繧・/button>
+            <h2 style={S.h2}>繧､繝吶Φ繝医ｒ菴懈・</h2>
           </div>
           <div style={S.cardLg}>
-            <Field label="イベント名 *">
+            <Field label="繧､繝吶Φ繝亥錐 *">
               <input ref={titleRef} style={{ ...S.input, borderColor: err ? C.danger : C.border }}
-                type="text" placeholder="例！E月�E飲み企E defaultValue=""
+                type="text" placeholder="萓具ｼ・譛医・鬟ｲ縺ｿ莨・ defaultValue=""
                 onKeyDown={(e) => e.key === "Enter" && handle()} />
-              {err && <p style={{ fontSize: "0.72rem", color: C.danger, marginTop: 4 }}>イベント名を�E力してください</p>}
+              {err && <p style={{ fontSize: "0.72rem", color: C.danger, marginTop: 4 }}>繧､繝吶Φ繝亥錐繧貞・蜉帙＠縺ｦ縺上□縺輔＞</p>}
             </Field>
-            <Field label="日時（任意！E>
+            <Field label="譌･譎ゑｼ井ｻｻ諢擾ｼ・>
               <input ref={dateRef} style={S.input} type="datetime-local" defaultValue="" />
             </Field>
-            <Field label="場所�E�任意！E>
-              <input ref={placeRef} style={S.input} type="text" placeholder="例：渋谷の屁E�E屁E defaultValue="" />
+            <Field label="蝣ｴ謇・井ｻｻ諢擾ｼ・>
+              <input ref={placeRef} style={S.input} type="text" placeholder="萓具ｼ壽ｸ玖ｰｷ縺ｮ螻・・螻・ defaultValue="" />
             </Field>
-            <Field label="メモ�E�任意！E>
-              <input ref={noteRef} style={S.input} type="text" placeholder="例：遅刻する場合�E連絡めE defaultValue="" />
+            <Field label="繝｡繝｢・井ｻｻ諢擾ｼ・>
+              <input ref={noteRef} style={S.input} type="text" placeholder="萓具ｼ夐≦蛻ｻ縺吶ｋ蝣ｴ蜷医・騾｣邨｡繧・ defaultValue="" />
             </Field>
-            <button style={{ ...S.btn, ...S.btnPrimary, marginTop: 4 }} onClick={handle}>作�Eする</button>
+            <button style={{ ...S.btn, ...S.btnPrimary, marginTop: 4 }} onClick={handle}>菴懈・縺吶ｋ</button>
           </div>
         </div>
       );
     }
 
-    /* ── イベント一覧 ── */
+    /* 笏笏 繧､繝吶Φ繝井ｸ隕ｧ 笏笏 */
     function EventList({ go, user }) {
       const events = (db.get("atsumeru_events") || []).filter((e) => e.createdBy === user);
       return (
         <div style={{ ...S.wrap, paddingTop: 28, paddingBottom: 80, ...S.anim }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
-            <h2 style={S.h2}>マイイベンチE/h2>
-            <button style={{ ...S.btn, ...S.btnPrimary, ...S.btnSm }} onClick={() => go("create")}>+ 新規作�E</button>
+            <h2 style={S.h2}>繝槭う繧､繝吶Φ繝・/h2>
+            <button style={{ ...S.btn, ...S.btnPrimary, ...S.btnSm }} onClick={() => go("create")}>+ 譁ｰ隕丈ｽ懈・</button>
           </div>
 
           {events.length === 0 ? (
             <div style={{ ...S.cardLg, textAlign: "center", padding: "48px 24px" }}>
               <p style={{ color: C.textMuted, marginBottom: 20, fontSize: "0.875rem" }}>
-                まだイベントがありません
+                縺ｾ縺繧､繝吶Φ繝医′縺ゅｊ縺ｾ縺帙ｓ
               </p>
               <button style={{ ...S.btn, ...S.btnPrimary }} onClick={() => go("create")}>
-                最初�Eイベントを作�E
+                譛蛻昴・繧､繝吶Φ繝医ｒ菴懈・
               </button>
             </div>
           ) : (
@@ -317,15 +317,15 @@
                         <div style={{ fontWeight: 600, fontSize: "0.9rem", marginBottom: 3,
                           whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{ev.title}</div>
                         <div style={{ fontSize: "0.75rem", color: C.textMuted }}>
-                          {ev.date ? fmtDate(ev.date) : "日時未宁E}{ev.place ? `　${ev.place}` : ""}
+                          {ev.date ? fmtDate(ev.date) : "譌･譎よ悴螳・}{ev.place ? `縲${ev.place}` : ""}
                         </div>
                       </div>
                       <div style={{ display: "flex", gap: 6, flexShrink: 0, marginLeft: 10 }}>
-                        <span style={S.badge(C.neutralBg, C.textSub)}>参加 {yes}</span>
+                        <span style={S.badge(C.neutralBg, C.textSub)}>蜿ょ刈 {yes}</span>
                         {ev.collecting && (
                           <span style={S.badge(paid === yes && yes > 0 ? C.successBg : C.warnBg,
                             paid === yes && yes > 0 ? C.success : C.warn)}>
-                            雁E�� {paid}/{yes}
+                            髮・≡ {paid}/{yes}
                           </span>
                         )}
                       </div>
@@ -339,7 +339,7 @@
       );
     }
 
-    /* ── メンバ�E行（幹事用�E�E── */
+    /* 笏笏 繝｡繝ｳ繝舌・陦鯉ｼ亥ｹｹ莠狗畑・・笏笏 */
     function MemberRow({ m, onRemove }) {
       return (
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between",
@@ -347,12 +347,12 @@
           <span style={{ fontSize: "0.875rem", color: C.text }}>{m.name}</span>
           <button onClick={(e) => { e.stopPropagation(); onRemove(); }}
             style={{ background: "none", border: "none", color: C.textMuted,
-              fontSize: "0.75rem", cursor: "pointer", fontFamily: C.font, padding: "3px 6px" }}>削除</button>
+              fontSize: "0.75rem", cursor: "pointer", fontFamily: C.font, padding: "3px 6px" }}>蜑企勁</button>
         </div>
       );
     }
 
-    /* ── 管琁E��面 ── */
+    /* 笏笏 邂｡逅・判髱｢ 笏笏 */
     function Manage({ eventId, go }) {
       const [ev, setEv] = useState(null);
       const [tab, setTab] = useState("rsvp");
@@ -384,8 +384,8 @@
 
       const copyLink = () => {
         navigator.clipboard?.writeText(shareUrl).then(() => {
-          alert("URLをコピ�Eしました。参加老E��送ってください、En\n" + shareUrl);
-        }).catch(() => { prompt("こ�EURLを参加老E��送ってください�E�E, shareUrl); });
+          alert("URL繧偵さ繝斐・縺励∪縺励◆縲ょ盾蜉閠・↓騾√▲縺ｦ縺上□縺輔＞縲・n\n" + shareUrl);
+        }).catch(() => { prompt("縺薙・URL繧貞盾蜉閠・↓騾√▲縺ｦ縺上□縺輔＞・・, shareUrl); });
       };
 const startCollecting = () => {
         const amount = Number(amountRef.current?.value);
@@ -419,12 +419,12 @@ const startCollecting = () => {
 
       return (
         <div style={{ ...S.wrap, paddingTop: 20, paddingBottom: 80, ...S.anim }}>
-          <button style={{ ...S.btn, ...S.btnGhost, ...S.btnSm, marginBottom: 16 }} onClick={() => go("list")}>戻めE/button>
+          <button style={{ ...S.btn, ...S.btnGhost, ...S.btnSm, marginBottom: 16 }} onClick={() => go("list")}>謌ｻ繧・/button>
 
           <div style={{ ...S.card, marginBottom: 12 }}>
             <h2 style={{ ...S.h2, marginBottom: 4 }}>{ev.title}</h2>
             <p style={{ fontSize: "0.78rem", color: C.textMuted }}>
-              {ev.date ? fmtDate(ev.date) : "日時未宁E}{ev.place ? `　${ev.place}` : ""}
+              {ev.date ? fmtDate(ev.date) : "譌･譎よ悴螳・}{ev.place ? `縲${ev.place}` : ""}
             </p>
             {ev.note && <p style={{ fontSize: "0.78rem", color: C.textSub, marginTop: 6 }}>{ev.note}</p>}
             <div style={S.divider} />
@@ -437,26 +437,26 @@ const startCollecting = () => {
                 value={shareUrl}
                 onFocus={(e) => e.target.select()}
               />
-              <button style={{ ...S.btn, ...S.btnPrimary, ...S.btnSm }} onClick={copyLink}>コピ�E</button>
+              <button style={{ ...S.btn, ...S.btnPrimary, ...S.btnSm }} onClick={copyLink}>繧ｳ繝斐・</button>
             </div>
 
             <button style={{ ...S.btn, ...S.btnGhost }} onClick={() => setShowSetup(!showSetup)}>
-              {ev.collecting ? "雁E��設定を変更" : "雁E��を開姁E}
+              {ev.collecting ? "髮・≡險ｭ螳壹ｒ螟画峩" : "髮・≡繧帝幕蟋・}
             </button>
 
             {showSetup && (
               <div style={{ marginTop: 16, padding: "16px", background: C.bg, borderRadius: C.radius }}>
-                <Field label="1人あたり�E金顁E>
+                <Field label="1莠ｺ縺ゅ◆繧翫・驥鷹｡・>
                   <input ref={amountRef} style={S.input} type="number" inputMode="numeric" placeholder="4500" defaultValue={ev.amount} />
                 </Field>
-                <Field label="送E��URL�E�EayPayなど・任意！E hint="入力すると参加老E��送E��ボタンが表示されまぁE>
+                <Field label="騾・≡URL・・ayPay縺ｪ縺ｩ繝ｻ莉ｻ諢擾ｼ・ hint="蜈･蜉帙☆繧九→蜿ょ刈閠・↓騾・≡繝懊ち繝ｳ縺瑚｡ｨ遉ｺ縺輔ｌ縺ｾ縺・>
                   <input ref={payUrlRef} style={S.input} type="url" inputMode="url"
                     autoCapitalize="none" autoCorrect="off" spellCheck={false}
                     placeholder="https://pay.paypay.ne.jp/..." defaultValue={ev.payUrl} />
                 </Field>
                 <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
-                  <button style={{ ...S.btn, ...S.btnGhost, flex: 1 }} onClick={() => setShowSetup(false)}>キャンセル</button>
-                  <button style={{ ...S.btn, ...S.btnPrimary, flex: 1 }} onClick={startCollecting}>雁E��を開姁E/button>
+                  <button style={{ ...S.btn, ...S.btnGhost, flex: 1 }} onClick={() => setShowSetup(false)}>繧ｭ繝｣繝ｳ繧ｻ繝ｫ</button>
+                  <button style={{ ...S.btn, ...S.btnPrimary, flex: 1 }} onClick={startCollecting}>髮・≡繧帝幕蟋・/button>
                 </div>
               </div>
             )}
@@ -467,31 +467,31 @@ const startCollecting = () => {
               ...S.btn, ...S.btnSm,
               background: tab === "rsvp" ? C.primary : C.border,
               color: tab === "rsvp" ? "#fff" : C.text,
-            }}>出欠 ({ev.members.length})</button>
+            }}>蜃ｺ谺 ({ev.members.length})</button>
             <button onClick={() => setTab("collect")} style={{
               ...S.btn, ...S.btnSm,
               background: tab === "collect" ? C.primary : C.border,
               color: tab === "collect" ? "#fff" : C.text,
-            }}>雁E�� ({yesMembers.length})</button>
+            }}>髮・≡ ({yesMembers.length})</button>
           </div>
 
           {tab === "rsvp" && (
             <div>
               {yesMembers.length > 0 && (
                 <div style={{ marginBottom: 20 }}>
-                  <p style={{ fontSize: "0.75rem", fontWeight: 700, color: C.success, marginBottom: 8 }}>参加 ({yesMembers.length})</p>
+                  <p style={{ fontSize: "0.75rem", fontWeight: 700, color: C.success, marginBottom: 8 }}>蜿ょ刈 ({yesMembers.length})</p>
                   {yesMembers.map((m) => <MemberRow key={m.id} m={m} onRemove={() => removeMember(m.id)} />)}
                 </div>
               )}
               {maybeMembers.length > 0 && (
                 <div style={{ marginBottom: 20 }}>
-                  <p style={{ fontSize: "0.75rem", fontWeight: 700, color: C.warn, marginBottom: 8 }}>未宁E({maybeMembers.length})</p>
+                  <p style={{ fontSize: "0.75rem", fontWeight: 700, color: C.warn, marginBottom: 8 }}>譛ｪ螳・({maybeMembers.length})</p>
                   {maybeMembers.map((m) => <MemberRow key={m.id} m={m} onRemove={() => removeMember(m.id)} />)}
                 </div>
               )}
               {noMembers.length > 0 && (
                 <div>
-                  <p style={{ fontSize: "0.75rem", fontWeight: 700, color: C.danger, marginBottom: 8 }}>不参加 ({noMembers.length})</p>
+                  <p style={{ fontSize: "0.75rem", fontWeight: 700, color: C.danger, marginBottom: 8 }}>荳榊盾蜉 ({noMembers.length})</p>
                   {noMembers.map((m) => <MemberRow key={m.id} m={m} onRemove={() => removeMember(m.id)} />)}
                 </div>
               )}
@@ -502,13 +502,13 @@ const startCollecting = () => {
             <div>
               {!ev.collecting && (
                 <div style={{ marginBottom: 12, padding: "12px", background: C.neutralBg, borderRadius: C.radius }}>
-                  <p style={{ fontSize: "0.78rem", color: C.textMuted }}>雁E��を開始するとチェチE��できまぁE/p>
+                  <p style={{ fontSize: "0.78rem", color: C.textMuted }}>髮・≡繧帝幕蟋九☆繧九→繝√ぉ繝・け縺ｧ縺阪∪縺・/p>
                 </div>
               )}
               {ev.collecting && (
                 <>
                   <div style={{ marginBottom: 16, padding: "12px", background: C.neutralBg, borderRadius: C.radius, textAlign: "center" }}>
-                    <p style={{ fontSize: "0.7rem", color: C.textMuted }}>雁E��状況E/p>
+                    <p style={{ fontSize: "0.7rem", color: C.textMuted }}>髮・≡迥ｶ豕・/p>
                     <p style={{ fontSize: "1.2rem", fontWeight: 700, color: C.text, marginTop: 4 }}>{paidCount} / {yesMembers.length}</p>
                   </div>
                   {yesMembers.map((m) => (
@@ -517,7 +517,7 @@ const startCollecting = () => {
                       <button onClick={() => togglePaid(m.id)} style={{
                         ...S.btn, ...S.btnSm,
                         background: m.paid ? C.success : C.border, color: m.paid ? "#fff" : C.text,
-                      }}>{m.paid ? "渁E : "未"}</button>
+                      }}>{m.paid ? "貂・ : "譛ｪ"}</button>
                     </div>
                   ))}
                 </>
@@ -578,7 +578,7 @@ const startCollecting = () => {
 
       const submitRsvp = (rsvp) => {
         const name = nameRef.current?.value?.trim();
-        if (!name) { alert("名前を�E力してください"); return; }
+        if (!name) { alert("蜷榊燕繧貞・蜉帙＠縺ｦ縺上□縺輔＞"); return; }
         const all = db.get("atsumeru_events") || [];
         const updated = all.map((e) => {
           if (e.id !== eventId) return e;
@@ -588,7 +588,7 @@ const startCollecting = () => {
         });
         db.set("atsumeru_events", updated);
         const nextEv = updated.find((e) => e.id === eventId) || null;
-        if (!nextEv) { alert("イベントが見つかりません"); return; }
+        if (!nextEv) { alert("繧､繝吶Φ繝医′隕九▽縺九ｊ縺ｾ縺帙ｓ"); return; }
         setEv(nextEv);
         writeNameToUrl(name);
         if (rsvp === "yes" && nextEv.collecting) { startPaymentFlow(name); return; }
@@ -600,7 +600,7 @@ const startCollecting = () => {
         const current = getCurrentEvent();
         if (!current) return;
         const member = current.members.find((m) => m.name === name);
-        if (!member || member.rsvp !== "yes") { alert("参加惁E��が見つかりません"); return; }
+        if (!member || member.rsvp !== "yes") { alert("蜿ょ刈諠・ｱ縺瑚ｦ九▽縺九ｊ縺ｾ縺帙ｓ"); return; }
         if (member.paid) { setMyName(name); setEv(current); setStep("rsvp_done"); return; }
         writeNameToUrl(name);
         setMyName(name);
@@ -641,7 +641,7 @@ const startCollecting = () => {
       const Header = () => (
         <div style={{ borderBottom: `1px solid ${C.border}`, background: C.surface, marginBottom: 24 }}>
           <div style={{ ...S.wrap, height: 52, display: "flex", alignItems: "center" }}>
-            <span style={{ fontSize: "0.9rem", fontWeight: 700, color: C.primary }}>アチE��ル</span>
+            <span style={{ fontSize: "0.9rem", fontWeight: 700, color: C.primary }}>繧｢繝・Γ繝ｫ</span>
           </div>
         </div>
       );
@@ -651,7 +651,7 @@ const startCollecting = () => {
           <Header />
           <div style={{ ...S.wrap, textAlign: "center", paddingTop: 48 }}>
             <div style={S.cardLg}>
-              <p style={{ color: C.textSub }}>イベントが見つかりません</p>
+              <p style={{ color: C.textSub }}>繧､繝吶Φ繝医′隕九▽縺九ｊ縺ｾ縺帙ｓ</p>
             </div>
           </div>
         </>
@@ -662,9 +662,9 @@ const startCollecting = () => {
           <Header />
           <div style={{ ...S.wrap, paddingTop: 24, ...S.anim }}>
             <div style={{ ...S.cardLg, textAlign: "center", padding: "44px 24px", borderColor: C.success }}>
-              <div style={{ fontSize: "0.75rem", fontWeight: 700, color: C.success, letterSpacing: "0.06em", marginBottom: 12 }}>完亁E/div>
-              <h2 style={{ ...S.h2, marginBottom: 8 }}>支払いを報告しました</h2>
-              <p style={S.sub}>幹事に反映されました。ありがとぁE��ざいます、E/p>
+              <div style={{ fontSize: "0.75rem", fontWeight: 700, color: C.success, letterSpacing: "0.06em", marginBottom: 12 }}>螳御ｺ・/div>
+              <h2 style={{ ...S.h2, marginBottom: 8 }}>謾ｯ謇輔＞繧貞ｱ蜻翫＠縺ｾ縺励◆</h2>
+              <p style={S.sub}>蟷ｹ莠九↓蜿肴丐縺輔ｌ縺ｾ縺励◆縲ゅ≠繧翫′縺ｨ縺・＃縺悶＞縺ｾ縺吶・/p>
             </div>
           </div>
         </>
@@ -675,11 +675,11 @@ const startCollecting = () => {
           <Header />
           <div style={{ ...S.wrap, paddingTop: 24, ...S.anim }}>
             <div style={{ ...S.cardLg, textAlign: "center" }}>
-              <p style={{ fontSize: "0.75rem", fontWeight: 700, color: C.textMuted, letterSpacing: "0.06em", marginBottom: 12 }}>確誁E/p>
-              <h2 style={{ ...S.h2, marginBottom: 8 }}>送E��は完亁E��ましたか！E/h2>
-              <p style={{ ...S.sub, marginBottom: 28 }}>{myName}さんの支払いを記録しまぁE/p>
-              <button style={{ ...S.btn, ...S.btnSuccess, marginBottom: 10 }} onClick={confirmPaid}>はぁE��E��E��しました</button>
-              <button style={{ ...S.btn, ...S.btnGhost }} onClick={() => setStep("rsvp_done")}>まだしてぁE��ぁE/button>
+              <p style={{ fontSize: "0.75rem", fontWeight: 700, color: C.textMuted, letterSpacing: "0.06em", marginBottom: 12 }}>遒ｺ隱・/p>
+              <h2 style={{ ...S.h2, marginBottom: 8 }}>騾・≡縺ｯ螳御ｺ・＠縺ｾ縺励◆縺具ｼ・/h2>
+              <p style={{ ...S.sub, marginBottom: 28 }}>{myName}縺輔ｓ縺ｮ謾ｯ謇輔＞繧定ｨ倬鹸縺励∪縺・/p>
+              <button style={{ ...S.btn, ...S.btnSuccess, marginBottom: 10 }} onClick={confirmPaid}>縺ｯ縺・・・≡縺励∪縺励◆</button>
+              <button style={{ ...S.btn, ...S.btnGhost }} onClick={() => setStep("rsvp_done")}>縺ｾ縺縺励※縺・↑縺・/button>
             </div>
           </div>
         </>
@@ -691,9 +691,9 @@ const startCollecting = () => {
           <div style={{ ...S.wrap, paddingTop: 24, textAlign: "center", ...S.anim }}>
             <div style={S.cardLg}>
               <div style={{ width: 36, height: 36, borderRadius: "50%", border: `2px solid ${C.border}`, borderTopColor: C.primary, animation: "spin 0.9s linear infinite", margin: "0 auto 20px" }} />
-              <h2 style={{ ...S.h2, marginBottom: 8 }}>送E��アプリを開ぁE��ぁE��ぁE/h2>
-              <p style={{ ...S.sub, marginBottom: 24 }}>送E��が終わったらこ�Eペ�Eジに戻ってください</p>
-              <button style={{ ...S.btn, ...S.btnGhost }} onClick={() => setStep("confirm")}>送E��が終わっぁE/button>
+              <h2 style={{ ...S.h2, marginBottom: 8 }}>騾・≡繧｢繝励Μ繧帝幕縺・※縺・∪縺・/h2>
+              <p style={{ ...S.sub, marginBottom: 24 }}>騾・≡縺檎ｵゅｏ縺｣縺溘ｉ縺薙・繝壹・繧ｸ縺ｫ謌ｻ縺｣縺ｦ縺上□縺輔＞</p>
+              <button style={{ ...S.btn, ...S.btnGhost }} onClick={() => setStep("confirm")}>騾・≡縺檎ｵゅｏ縺｣縺・/button>
             </div>
           </div>
         </>
@@ -708,39 +708,39 @@ const startCollecting = () => {
           <div style={{ ...S.wrap, paddingBottom: 60, ...S.anim }}>
             <div style={S.cardLg}>
               <div style={{ textAlign: "center", marginBottom: 20 }}>
-                <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 40, height: 40, borderRadius: "50%", background: C.successBg, color: C.success, fontSize: "1rem", marginBottom: 12 }}>✁E/div>
-                <h2 style={{ ...S.h2, marginBottom: 4 }}>回答しました</h2>
-                <p style={{ fontSize: "0.8rem", color: C.textMuted }}>{myName}さん �E�E{myMember?.rsvp === "yes" ? "参加" : myMember?.rsvp === "no" ? "不参加" : "未宁E}</p>
+                <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 40, height: 40, borderRadius: "50%", background: C.successBg, color: C.success, fontSize: "1rem", marginBottom: 12 }}>笨・/div>
+                <h2 style={{ ...S.h2, marginBottom: 4 }}>蝗樒ｭ斐＠縺ｾ縺励◆</h2>
+                <p style={{ fontSize: "0.8rem", color: C.textMuted }}>{myName}縺輔ｓ ・・{myMember?.rsvp === "yes" ? "蜿ょ刈" : myMember?.rsvp === "no" ? "荳榊盾蜉" : "譛ｪ螳・}</p>
               </div>
 
               {ev.collecting && myMember?.rsvp === "yes" && !myMember?.paid && (
                 <div style={{ background: C.bg, borderRadius: C.radius, padding: 18, marginBottom: 4 }}>
                   <div style={{ textAlign: "center", marginBottom: 14 }}>
-                    <div style={{ fontSize: "1.5rem", fontWeight: 700, color: C.text, letterSpacing: "-0.02em" }}>¥{ev.amount.toLocaleString()}</div>
-                    <p style={{ fontSize: "0.72rem", color: C.textMuted, marginTop: 2 }}>お支払い金顁E/p>
+                    <div style={{ fontSize: "1.5rem", fontWeight: 700, color: C.text, letterSpacing: "-0.02em" }}>ﾂ･{ev.amount.toLocaleString()}</div>
+                    <p style={{ fontSize: "0.72rem", color: C.textMuted, marginTop: 2 }}>縺頑髪謇輔＞驥鷹｡・/p>
                   </div>
                   {ev.payUrl
-                    ? <button style={{ ...S.btn, background: "#E00020", color: "#fff" }} onClick={openPayLink}>PayPayで送E��する</button>
-                    : <button style={{ ...S.btn, ...S.btnPrimary }} onClick={() => setStep("confirm")}>送E��したので報告すめE/button>
+                    ? <button style={{ ...S.btn, background: "#E00020", color: "#fff" }} onClick={openPayLink}>PayPay縺ｧ騾・≡縺吶ｋ</button>
+                    : <button style={{ ...S.btn, ...S.btnPrimary }} onClick={() => setStep("confirm")}>騾・≡縺励◆縺ｮ縺ｧ蝣ｱ蜻翫☆繧・/button>
                   }
                 </div>
               )}
 
               {ev.collecting && myMember?.paid && (
                 <div style={{ background: C.successBg, borderRadius: C.radius, padding: 16, textAlign: "center", marginBottom: 4 }}>
-                  <span style={{ fontSize: "0.875rem", fontWeight: 600, color: C.success }}>支払い済みでぁE/span>
+                  <span style={{ fontSize: "0.875rem", fontWeight: 600, color: C.success }}>謾ｯ謇輔＞貂医∩縺ｧ縺・/span>
                 </div>
               )}
 
               {yesMembers.length > 0 && (
                 <div style={{ marginTop: 20, borderTop: `1px solid ${C.border}`, paddingTop: 16 }}>
-                  <p style={{ fontSize: "0.72rem", fontWeight: 700, color: C.textMuted, marginBottom: 8, letterSpacing: "0.03em" }}>参加老E��{yesMembers.length}吁E/p>
+                  <p style={{ fontSize: "0.72rem", fontWeight: 700, color: C.textMuted, marginBottom: 8, letterSpacing: "0.03em" }}>蜿ょ刈閠・{yesMembers.length}蜷・/p>
                   {yesMembers.map((m) => (
                     <div key={m.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "6px 0" }}>
                       <span style={{ fontSize: "0.85rem", color: C.text }}>{m.name}</span>
                       {ev.collecting && (
                         <span style={S.badge(m.paid ? C.successBg : C.warnBg, m.paid ? C.success : C.warn)}>
-                          {m.paid ? "渁E : "未"}
+                          {m.paid ? "貂・ : "譛ｪ"}
                         </span>
                       )}
                     </div>
@@ -758,30 +758,30 @@ const startCollecting = () => {
           <div style={{ ...S.wrap, paddingBottom: 60, ...S.anim }}>
             <div style={S.cardLg}>
               <h2 style={{ ...S.h2, marginBottom: 4 }}>{ev.title}</h2>
-              <p style={{ fontSize: "0.78rem", color: C.textMuted, marginBottom: 2 }}>{ev.date ? fmtDate(ev.date) : "日時未宁E}{ev.place ? `　${ev.place}` : ""}</p>
+              <p style={{ fontSize: "0.78rem", color: C.textMuted, marginBottom: 2 }}>{ev.date ? fmtDate(ev.date) : "譌･譎よ悴螳・}{ev.place ? `縲${ev.place}` : ""}</p>
               {ev.note && <p style={{ fontSize: "0.78rem", color: C.textSub, marginTop: 4 }}>{ev.note}</p>}
 
               <div style={S.divider} />
 
-              {/* 出欠を回答すめE*/}
-              <p style={{ fontWeight: 600, fontSize: "0.875rem", marginBottom: 14, color: C.text }}>出欠を回答すめE/p>
-              <Field label="名前">
-                <input ref={nameRef} style={S.input} type="text" placeholder="お名剁E defaultValue="" />
+              {/* 蜃ｺ谺繧貞屓遲斐☆繧・*/}
+              <p style={{ fontWeight: 600, fontSize: "0.875rem", marginBottom: 14, color: C.text }}>蜃ｺ谺繧貞屓遲斐☆繧・/p>
+              <Field label="蜷榊燕">
+                <input ref={nameRef} style={S.input} type="text" placeholder="縺雁錐蜑・ defaultValue="" />
               </Field>
               <div className="rsvp-actions">
-                <button style={{ ...S.btn, ...S.btnSuccess, flex: 1 }} onClick={() => submitRsvp("yes")}>参加</button>
-                <button style={{ ...S.btn, ...S.btnWarn,   flex: 1 }} onClick={() => submitRsvp("maybe")}>未宁E/button>
-                <button style={{ ...S.btn, ...S.btnDanger, flex: 1 }} onClick={() => submitRsvp("no")}>不参加</button>
+                <button style={{ ...S.btn, ...S.btnSuccess, flex: 1 }} onClick={() => submitRsvp("yes")}>蜿ょ刈</button>
+                <button style={{ ...S.btn, ...S.btnWarn,   flex: 1 }} onClick={() => submitRsvp("maybe")}>譛ｪ螳・/button>
+                <button style={{ ...S.btn, ...S.btnDanger, flex: 1 }} onClick={() => submitRsvp("no")}>荳榊盾蜉</button>
               </div>
 
-              {/* あとから支払う */}
+              {/* 縺ゅ→縺九ｉ謾ｯ謇輔≧ */}
               {ev.collecting && (() => {
                 const unpaid = ev.members.filter((m) => m.rsvp === "yes" && !m.paid);
                 if (unpaid.length === 0) return null;
                 return (
                   <div style={{ marginTop: 20, padding: "16px", background: C.bg, borderRadius: C.radius, border: `1px solid ${C.border}` }}>
-                    <p style={{ fontSize: "0.75rem", fontWeight: 700, color: C.textSub, marginBottom: 2 }}>あとから支払う</p>
-                    <p style={{ fontSize: "0.72rem", color: C.textMuted, marginBottom: 12 }}>自刁E�E名前を選んでください</p>
+                    <p style={{ fontSize: "0.75rem", fontWeight: 700, color: C.textSub, marginBottom: 2 }}>縺ゅ→縺九ｉ謾ｯ謇輔≧</p>
+                    <p style={{ fontSize: "0.72rem", color: C.textMuted, marginBottom: 12 }}>閾ｪ蛻・・蜷榊燕繧帝∈繧薙〒縺上□縺輔＞</p>
                     <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                       {unpaid.map((m) => (
                         <button key={m.id} onClick={() => handlePayLaterBySelection(m.name)} style={{
@@ -805,14 +805,14 @@ const startCollecting = () => {
 
               {ev.members.length > 0 && (
                 <div style={{ marginTop: 24, borderTop: `1px solid ${C.border}`, paddingTop: 16 }}>
-                  <p style={{ fontSize: "0.72rem", fontWeight: 700, color: C.textMuted, marginBottom: 8, letterSpacing: "0.03em" }}>回答状況　{ev.members.length}吁E/p>
+                  <p style={{ fontSize: "0.72rem", fontWeight: 700, color: C.textMuted, marginBottom: 8, letterSpacing: "0.03em" }}>蝗樒ｭ皮憾豕√{ev.members.length}蜷・/p>
                   {ev.members.map((m) => (
                     <div key={m.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "6px 0" }}>
                       <span style={{ fontSize: "0.85rem", color: C.text }}>{m.name}</span>
                       <span style={S.badge(
                         m.rsvp === "yes" ? C.successBg : m.rsvp === "no" ? C.dangerBg : C.warnBg,
                         m.rsvp === "yes" ? C.success : m.rsvp === "no" ? C.danger : C.warn,
-                      )}>{m.rsvp === "yes" ? "参加" : m.rsvp === "no" ? "不参加" : "未宁E}</span>
+                      )}>{m.rsvp === "yes" ? "蜿ょ刈" : m.rsvp === "no" ? "荳榊盾蜉" : "譛ｪ螳・}</span>
                     </div>
                   ))}
                 </div>

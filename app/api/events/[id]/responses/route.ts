@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabase";
+import { getSupabaseAdmin } from "@/lib/supabase";
 
 function randomToken() {
   return crypto.randomUUID().replace(/-/g, "");
@@ -8,31 +8,31 @@ function randomToken() {
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   const token = req.nextUrl.searchParams.get("token");
   if (!token) {
-    return NextResponse.json({ error: "ŠÇ—ƒg[ƒNƒ“‚ª•K—v‚Å‚·B" }, { status: 401 });
+    return NextResponse.json({ error: "ç®¡ç†ãƒˆãƒ¼ã‚¯ãƒ³ãŒå¿…è¦ã§ã™ã€‚" }, { status: 401 });
   }
 
-  const { data: event, error: eventError } = await supabaseAdmin
+  const { data: event, error: eventError } = await getSupabaseAdmin()
     .from("events")
     .select("owner_token")
     .eq("id", params.id)
     .single();
 
   if (eventError || !event) {
-    return NextResponse.json({ error: "ƒCƒxƒ“ƒg‚ªŒ©‚Â‚©‚è‚Ü‚¹‚ñB" }, { status: 404 });
+    return NextResponse.json({ error: "ã‚¤ãƒ™ãƒ³ãƒˆãŒè¦‹ã¤ã‹ã‚Šã¾ã›ã‚“ã€‚" }, { status: 404 });
   }
 
   if (event.owner_token !== token) {
-    return NextResponse.json({ error: "ŠÇ—Ò‚Æ‚µ‚Ä”FØ‚Å‚«‚Ü‚¹‚ñ‚Å‚µ‚½B" }, { status: 403 });
+    return NextResponse.json({ error: "ç®¡ç†è€…ã¨ã—ã¦èªè¨¼ã§ãã¾ã›ã‚“ã§ã—ãŸã€‚" }, { status: 403 });
   }
 
-  const { data, error } = await supabaseAdmin
+  const { data, error } = await getSupabaseAdmin()
     .from("responses")
     .select("id,name,rsvp,paid,paid_at,created_at,updated_at")
     .eq("event_id", params.id)
     .order("created_at", { ascending: true });
 
   if (error) {
-    return NextResponse.json({ error: "‰ñ“šˆê——‚ğæ“¾‚Å‚«‚Ü‚¹‚ñ‚Å‚µ‚½B" }, { status: 500 });
+    return NextResponse.json({ error: "å›ç­”ä¸€è¦§ã‚’å–å¾—ã§ãã¾ã›ã‚“ã§ã—ãŸã€‚" }, { status: 500 });
   }
 
   return NextResponse.json({ responses: data || [] });
@@ -43,32 +43,32 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: "•s³‚ÈƒŠƒNƒGƒXƒg‚Å‚·B" }, { status: 400 });
+    return NextResponse.json({ error: "ä¸æ­£ãªãƒªã‚¯ã‚¨ã‚¹ãƒˆã§ã™ã€‚" }, { status: 400 });
   }
 
   const name = typeof body.name === "string" ? body.name.trim() : "";
   const rsvp = body.rsvp;
 
   if (!name) {
-    return NextResponse.json({ error: "–¼‘O‚ğ“ü—Í‚µ‚Ä‚­‚¾‚³‚¢B" }, { status: 400 });
+    return NextResponse.json({ error: "åå‰ã‚’å…¥åŠ›ã—ã¦ãã ã•ã„ã€‚" }, { status: 400 });
   }
 
   if (rsvp !== "yes" && rsvp !== "maybe" && rsvp !== "no") {
-    return NextResponse.json({ error: "oŒ‡‚Ì‘I‘ğ‚ª•s³‚Å‚·B" }, { status: 400 });
+    return NextResponse.json({ error: "å‡ºæ¬ ã®é¸æŠãŒä¸æ­£ã§ã™ã€‚" }, { status: 400 });
   }
 
-  const { data: eventExists } = await supabaseAdmin
+  const { data: eventExists } = await getSupabaseAdmin()
     .from("events")
     .select("id")
     .eq("id", params.id)
     .single();
 
   if (!eventExists) {
-    return NextResponse.json({ error: "ƒCƒxƒ“ƒg‚ªŒ©‚Â‚©‚è‚Ü‚¹‚ñB" }, { status: 404 });
+    return NextResponse.json({ error: "ã‚¤ãƒ™ãƒ³ãƒˆãŒè¦‹ã¤ã‹ã‚Šã¾ã›ã‚“ã€‚" }, { status: 404 });
   }
 
   const editToken = randomToken();
-  const { data, error } = await supabaseAdmin
+  const { data, error } = await getSupabaseAdmin()
     .from("responses")
     .insert({
       event_id: params.id,
@@ -81,7 +81,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     .single();
 
   if (error) {
-    return NextResponse.json({ error: "‰ñ“š‚ğ•Û‘¶‚Å‚«‚Ü‚¹‚ñ‚Å‚µ‚½B" }, { status: 500 });
+    return NextResponse.json({ error: "å›ç­”ã‚’ä¿å­˜ã§ãã¾ã›ã‚“ã§ã—ãŸã€‚" }, { status: 500 });
   }
 
   return NextResponse.json({ responseId: data.id, editToken: data.edit_token });

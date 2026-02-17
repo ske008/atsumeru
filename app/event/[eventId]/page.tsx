@@ -53,12 +53,12 @@ export default function EventPage() {
         const res = await fetch(`/api/events/${params.eventId}`);
         const data = await res.json();
         if (!res.ok) {
-          setStatus({ kind: "error", message: data.error || "ƒCƒxƒ“ƒgî•ñ‚ğ“Ç‚İ‚ß‚Ü‚¹‚ñ‚Å‚µ‚½B" });
+          setStatus({ kind: "error", message: data.error || "ã‚¤ãƒ™ãƒ³ãƒˆæƒ…å ±ã‚’èª­ã¿è¾¼ã‚ã¾ã›ã‚“ã§ã—ãŸã€‚" });
           return;
         }
         setEvent(data);
       } catch {
-        setStatus({ kind: "error", message: "’ÊMƒGƒ‰[‚ª”­¶‚µ‚Ü‚µ‚½BŠÔ‚ğ‚¨‚¢‚ÄÄs‚µ‚Ä‚­‚¾‚³‚¢B" });
+        setStatus({ kind: "error", message: "é€šä¿¡ã‚¨ãƒ©ãƒ¼ãŒç™ºç”Ÿã—ã¾ã—ãŸã€‚æ™‚é–“ã‚’ãŠã„ã¦å†è©¦è¡Œã—ã¦ãã ã•ã„ã€‚" });
       }
     };
 
@@ -68,7 +68,7 @@ export default function EventPage() {
   const submitRsvp = async (rsvp: ResponseRow["rsvp"]) => {
     const trimmedName = name.trim();
     if (!trimmedName) {
-      setNameError("–¼‘O‚ğ“ü—Í‚µ‚Ä‚­‚¾‚³‚¢B");
+      setNameError("åå‰ã‚’å…¥åŠ›ã—ã¦ãã ã•ã„ã€‚");
       return;
     }
 
@@ -85,7 +85,7 @@ export default function EventPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        setStatus({ kind: "error", message: data.error || "‰ñ“š‚ğ‘—M‚Å‚«‚Ü‚¹‚ñ‚Å‚µ‚½B" });
+        setStatus({ kind: "error", message: data.error || "å›ç­”ã‚’é€ä¿¡ã§ãã¾ã›ã‚“ã§ã—ãŸã€‚" });
         return;
       }
 
@@ -99,12 +99,12 @@ export default function EventPage() {
       setEditToken(data.editToken);
 
       if (rsvp === "yes") {
-        setStatus({ kind: "success", message: "Q‰Á‚Å‰ñ“š‚µ‚Ü‚µ‚½B•K—v‚È‚ç‚±‚Ì‚Ü‚Üx•¥‚¢Ï‚İ‚É‚µ‚Ä‚­‚¾‚³‚¢B" });
+        setStatus({ kind: "success", message: "å‚åŠ ã§å›ç­”ã—ã¾ã—ãŸã€‚å¿…è¦ãªã‚‰ã“ã®ã¾ã¾æ”¯æ‰•ã„æ¸ˆã¿ã«ã—ã¦ãã ã•ã„ã€‚" });
       } else {
-        setStatus({ kind: "success", message: "‰ñ“š‚ğ“o˜^‚µ‚Ü‚µ‚½B" });
+        setStatus({ kind: "success", message: "å›ç­”ã‚’ç™»éŒ²ã—ã¾ã—ãŸã€‚" });
       }
     } catch {
-      setStatus({ kind: "error", message: "’ÊMƒGƒ‰[‚ª”­¶‚µ‚Ü‚µ‚½BŠÔ‚ğ‚¨‚¢‚ÄÄs‚µ‚Ä‚­‚¾‚³‚¢B" });
+      setStatus({ kind: "error", message: "é€šä¿¡ã‚¨ãƒ©ãƒ¼ãŒç™ºç”Ÿã—ã¾ã—ãŸã€‚æ™‚é–“ã‚’ãŠã„ã¦å†è©¦è¡Œã—ã¦ãã ã•ã„ã€‚" });
     } finally {
       setSending(false);
     }
@@ -112,7 +112,7 @@ export default function EventPage() {
 
   const markPaid = async () => {
     if (!response || !editToken) {
-      setStatus({ kind: "error", message: "x•¥‚¢ó‘Ô‚ğXV‚Å‚«‚Ü‚¹‚ñBÄ“x‰ñ“š‚µ‚Ä‚©‚ç‚¨‚µ‚­‚¾‚³‚¢B" });
+      setStatus({ kind: "error", message: "æ”¯æ‰•ã„çŠ¶æ…‹ã‚’æ›´æ–°ã§ãã¾ã›ã‚“ã€‚å†åº¦å›ç­”ã—ã¦ã‹ã‚‰ãŠè©¦ã—ãã ã•ã„ã€‚" });
       return;
     }
 
@@ -128,14 +128,14 @@ export default function EventPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        setStatus({ kind: "error", message: data.error || "x•¥‚¢ó‘Ô‚ğXV‚Å‚«‚Ü‚¹‚ñ‚Å‚µ‚½B" });
+        setStatus({ kind: "error", message: data.error || "æ”¯æ‰•ã„çŠ¶æ…‹ã‚’æ›´æ–°ã§ãã¾ã›ã‚“ã§ã—ãŸã€‚" });
         return;
       }
 
       setResponse((prev) => (prev ? { ...prev, paid: !!data.paid, paid_at: data.paid_at ?? null } : prev));
-      setStatus({ kind: "success", message: "x•¥‚¢Ï‚İ‚ÉXV‚µ‚Ü‚µ‚½B" });
+      setStatus({ kind: "success", message: "æ”¯æ‰•ã„æ¸ˆã¿ã«æ›´æ–°ã—ã¾ã—ãŸã€‚" });
     } catch {
-      setStatus({ kind: "error", message: "’ÊMƒGƒ‰[‚ª”­¶‚µ‚Ü‚µ‚½BŠÔ‚ğ‚¨‚¢‚ÄÄs‚µ‚Ä‚­‚¾‚³‚¢B" });
+      setStatus({ kind: "error", message: "é€šä¿¡ã‚¨ãƒ©ãƒ¼ãŒç™ºç”Ÿã—ã¾ã—ãŸã€‚æ™‚é–“ã‚’ãŠã„ã¦å†è©¦è¡Œã—ã¦ãã ã•ã„ã€‚" });
     } finally {
       setMarkingPaid(false);
     }
@@ -149,7 +149,7 @@ export default function EventPage() {
     return (
       <main className="container">
         <div className="card">
-          <p className="status status-info">ƒCƒxƒ“ƒgî•ñ‚ğ“Ç‚İ‚ñ‚Å‚¢‚Ü‚·...</p>
+          <p className="status status-info">ã‚¤ãƒ™ãƒ³ãƒˆæƒ…å ±ã‚’èª­ã¿è¾¼ã‚“ã§ã„ã¾ã™...</p>
           {status && <p className={`status status-${status.kind}`}>{status.message}</p>}
         </div>
       </main>
@@ -161,21 +161,21 @@ export default function EventPage() {
       <div className="stack">
         <section className="card">
           <h1 className="h1">{event.title}</h1>
-          <p className="hint">‚±‚Ìƒy[ƒW‚ÅoŒ‡‚ğ‘—M‚µ‚Ü‚·B</p>
+          <p className="hint">ã“ã®ãƒšãƒ¼ã‚¸ã§å‡ºæ¬ ã‚’é€ä¿¡ã—ã¾ã™ã€‚</p>
           <p className="hint" style={{ marginTop: 8 }}>
-            {event.date || "“ú–¢’è"}
+            {event.date || "æ—¥æ™‚æœªå®š"}
             {event.place ? ` / ${event.place}` : ""}
           </p>
           {event.note && <p className="notice" style={{ marginTop: 10 }}>{event.note}</p>}
         </section>
 
         <section className="card">
-          <h2 className="h2">oŒ‡‚ğ‰ñ“š‚·‚é</h2>
+          <h2 className="h2">å‡ºæ¬ ã‚’å›ç­”ã™ã‚‹</h2>
           <div className="stack" style={{ marginTop: 12 }}>
             <div>
               <input
                 className="input"
-                placeholder="‚¨–¼‘O"
+                placeholder="ãŠåå‰"
                 value={name}
                 onChange={(e) => {
                   setName(e.target.value);
@@ -185,30 +185,30 @@ export default function EventPage() {
               {nameError && <p className="status status-error" style={{ marginTop: 8 }}>{nameError}</p>}
             </div>
             <div className="grid3">
-              <button className="btn btn-primary" disabled={sending} onClick={() => submitRsvp("yes")}>Q‰Á</button>
-              <button className="btn btn-ghost" disabled={sending} onClick={() => submitRsvp("maybe")}>–¢’è</button>
-              <button className="btn btn-ghost" disabled={sending} onClick={() => submitRsvp("no")}>•sQ‰Á</button>
+              <button className="btn btn-primary" disabled={sending} onClick={() => submitRsvp("yes")}>å‚åŠ </button>
+              <button className="btn btn-ghost" disabled={sending} onClick={() => submitRsvp("maybe")}>æœªå®š</button>
+              <button className="btn btn-ghost" disabled={sending} onClick={() => submitRsvp("no")}>ä¸å‚åŠ </button>
             </div>
           </div>
         </section>
 
         {canShowPaymentCard && (
           <section className="card">
-            <h2 className="h2">x•¥‚¢</h2>
+            <h2 className="h2">æ”¯æ‰•ã„</h2>
             {!response?.paid ? (
               <div className="stack" style={{ marginTop: 10 }}>
-                <p className="notice">‹àŠz: {event.amount.toLocaleString()}‰~</p>
+                <p className="notice">é‡‘é¡: {event.amount.toLocaleString()}å††</p>
                 {event.pay_url && (
                   <a href={event.pay_url} target="_blank" rel="noreferrer">
-                    <button className="btn btn-primary" style={{ width: "100%" }}>‘—‹àƒy[ƒW‚ğŠJ‚­</button>
+                    <button className="btn btn-primary" style={{ width: "100%" }}>é€é‡‘ãƒšãƒ¼ã‚¸ã‚’é–‹ã</button>
                   </a>
                 )}
                 <button className="btn btn-ghost" onClick={markPaid} disabled={markingPaid}>
-                  {markingPaid ? "XV’†..." : "x•¥‚¢Ï‚İ‚É‚·‚é"}
+                  {markingPaid ? "æ›´æ–°ä¸­..." : "æ”¯æ‰•ã„æ¸ˆã¿ã«ã™ã‚‹"}
                 </button>
               </div>
             ) : (
-              <p className="status status-success" style={{ marginTop: 10 }}>x•¥‚¢Ï‚İ‚Å‚·B‚ ‚è‚ª‚Æ‚¤‚²‚´‚¢‚Ü‚·B</p>
+              <p className="status status-success" style={{ marginTop: 10 }}>æ”¯æ‰•ã„æ¸ˆã¿ã§ã™ã€‚ã‚ã‚ŠãŒã¨ã†ã”ã–ã„ã¾ã™ã€‚</p>
             )}
           </section>
         )}

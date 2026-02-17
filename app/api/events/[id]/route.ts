@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabase";
+import { getSupabaseAdmin } from "@/lib/supabase";
 
 export async function GET(_: NextRequest, { params }: { params: { id: string } }) {
-  const { data, error } = await supabaseAdmin
+  const { data, error } = await getSupabaseAdmin()
     .from("events")
     .select("id,title,date,place,note,collecting,amount,pay_url,created_at")
     .eq("id", params.id)
     .single();
 
   if (error || !data) {
-    return NextResponse.json({ error: "ƒCƒxƒ“ƒg‚ªŒ©‚Â‚©‚è‚Ü‚¹‚ñB" }, { status: 404 });
+    return NextResponse.json({ error: "ã‚¤ãƒ™ãƒ³ãƒˆãŒè¦‹ã¤ã‹ã‚Šã¾ã›ã‚“ã€‚" }, { status: 404 });
   }
 
   return NextResponse.json(data);
