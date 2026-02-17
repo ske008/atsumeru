@@ -169,6 +169,16 @@ export default function EventPage() {
           {event.note && <p className="notice" style={{ marginTop: 10 }}>{event.note}</p>}
         </section>
 
+        {event.collecting && (
+          <section className="card" style={{ background: "#EEF4F0", borderColor: "#b7e1cb" }}>
+            <h2 className="h2">集金のご案内</h2>
+            <p style={{ fontSize: "1.3rem", fontWeight: 700, marginTop: 8 }}>
+              ¥{event.amount.toLocaleString()}<span style={{ fontSize: "0.75rem", fontWeight: 500, color: "#6B6B67", marginLeft: 4 }}>/ 1人</span>
+            </p>
+            {event.pay_url && <p className="hint" style={{ marginTop: 6 }}>参加回答後にオンライン送金できます</p>}
+          </section>
+        )}
+
         <section className="card">
           <h2 className="h2">�o�����񓚂���</h2>
           <div className="stack" style={{ marginTop: 12 }}>
