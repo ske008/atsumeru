@@ -763,6 +763,14 @@ const startCollecting = () => {
 
               <div style={S.divider} />
 
+              {ev.collecting && (
+                <div style={{ background: C.primaryBg, borderRadius: C.radius, padding: 16, marginBottom: 20, border: `1px solid ${C.border}` }}>
+                  <p style={{ fontSize: "0.72rem", fontWeight: 700, color: C.primaryText, letterSpacing: "0.03em", marginBottom: 6 }}>集金のご案内</p>
+                  <div style={{ fontSize: "1.3rem", fontWeight: 700, color: C.text, letterSpacing: "-0.02em" }}>¥{ev.amount.toLocaleString()}<span style={{ fontSize: "0.75rem", fontWeight: 500, color: C.textSub, marginLeft: 4 }}>/ 1人</span></div>
+                  {ev.payUrl && <p style={{ fontSize: "0.72rem", color: C.textMuted, marginTop: 4 }}>参加回答後にオンライン送金できます</p>}
+                </div>
+              )}
+
               {/* 蜃ｺ谺繧貞屓遲斐☆繧・*/}
               <p style={{ fontWeight: 600, fontSize: "0.875rem", marginBottom: 14, color: C.text }}>蜃ｺ谺繧貞屓遲斐☆繧・/p>
               <Field label="蜷榊燕">
