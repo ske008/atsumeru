@@ -56,7 +56,7 @@
 ## ファイル構成
 
 ```
-c:\business\athumeru\
+c:\business\atsumeru\
 ├── .github/
 │   └── workflows/
 │       └── pages.yml          # GitHub Pages デプロイ設定
