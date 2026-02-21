@@ -15,6 +15,8 @@ python3 -m http.server 8080
 
 ブラウザで `http://localhost:8080/` を開く。ビルド不要。
 
+**Supabase設定**: `config.js` に Supabase URL と anon key を記載（.gitignore済み）。
+
 **デプロイ**: `main` を含む全ブランチへの push が GitHub Actions で自動的に GitHub Pages へデプロイされる（`.github/workflows/pages.yml`）。
 
 ## アーキテクチャ
@@ -22,8 +24,9 @@ python3 -m http.server 8080
 **単一ファイル構成**: `index.html` にすべてが含まれる。
 
 - **React 18** (CDN/UMD) + **Babel standalone** でブラウザ内JSXトランスパイル
-- **localStorage** のみ（`atsumeru_events` / `atsumeru_user`）— バックエンド・DB一切なし
-- タブ間リアルタイム同期: `storage` イベント + 1秒ポーリング
+- **Supabase** でデータ永続化（`events` / `members` テーブル）
+- **Supabase Realtime** で変更をリアルタイム検知（ポーリング不要）
+- ユーザー識別は `localStorage`（`atsumeru_user`）にメールを保存する簡易方式
 
 ### ルーティング
 
@@ -36,25 +39,35 @@ go("home")            // argなし
 
 `App.useEffect` 起動時に `?event=<id>` URLパラメータを検出し、自動で `participant` ページに遷移する。
 
-### データモデル
+### データモデル（Supabase）
 
-```js
-// atsumeru_events: Event[]
-Event {
-  id, title, date, place, note,
-  createdBy, createdAt,
-  members: Member[],
-  collecting: boolean, amount: number, payUrl: string
-}
+```sql
+-- events テーブル
+id TEXT PRIMARY KEY
+title TEXT NOT NULL
+date TEXT
+place TEXT
+note TEXT
+created_by TEXT NOT NULL
+created_at TEXT NOT NULL
+collecting BOOLEAN DEFAULT FALSE
+amount INTEGER DEFAULT 0
+pay_url TEXT DEFAULT ''
 
-Member { id, name, rsvp: "yes"|"no"|"maybe", paid: boolean, paidAt: string|null }
+-- members テーブル
+id TEXT PRIMARY KEY
+event_id TEXT NOT NULL REFERENCES events(id)
+name TEXT NOT NULL
+rsvp TEXT ('yes'|'no'|'maybe')
+paid BOOLEAN DEFAULT FALSE
+paid_at TEXT
 ```
 
 ### コンポーネント構成
 
 | コンポーネント | 役割 |
 |---|---|
-| `App` | ルートコンポーネント。`page` stateで画面を切り替え。Nav表示制御も担当 |
+| `App` | ルートコンポーネント。`page` stateで画面を切り替え |
 | `Nav` | 共通ヘッダー（参加者ページでは非表示） |
 | `Home` | ランディング |
 | `Login` | メール入力のみ（認証なし） |
@@ -65,15 +78,19 @@ Member { id, name, rsvp: "yes"|"no"|"maybe", paid: boolean, paidAt: string|null 
 | `Field` | ラベル・ヒント付きフォームフィールドの共通ラッパー |
 | `MemberRow` | 出欠タブのメンバー1行（削除ボタン付き） |
 
-### データ更新パターン（read-modify-write）
+### DB操作パターン
 
-localStorageへの書き込みは必ず以下の形で行う（`Manage.save()` が典型例）：
+`db` オブジェクト経由でSupabaseを操作する（直接 `supabase.from()` しない）：
 
 ```js
-const all = db.get("atsumeru_events") || [];
-const idx = all.findIndex((e) => e.id === eventId);
-if (idx >= 0) all[idx] = updatedEvent;
-db.set("atsumeru_events", all);
+await db.getEvents(user)          // イベント一覧取得
+await db.getEvent(id)             // 単一イベント取得
+await db.createEvent(ev)          // イベント作成
+await db.updateEvent(id, fields)  // イベント更新
+await db.getMembers(eventId)      // メンバー一覧取得
+await db.upsertMember(eventId, name, rsvp)  // メンバー追加/更新
+await db.removeMember(memberId)   // メンバー削除
+await db.setPaid(memberId, paid)  // 支払い状態更新
 ```
 
 ### 参加者ページのステートマシン
@@ -83,12 +100,9 @@ rsvp → rsvp_done → paying → confirm → done
                  ↘ confirm（payUrl未設定時）→ done
 ```
 
-「あとから支払う」フロー（`rsvp` 画面に表示）: `selectedPayName` stateで名前を選択 → `handlePayLaterBySelection()` → payUrlあり: `openPayLink()` → `paying` → `confirm` → `done` / payUrlなし: `confirm` → `done`
-
-`paying` ステップでは `visibilitychange` / `focus` イベントを監視し、送金アプリから戻った時点で自動的に `confirm` へ遷移する。
-
 ## コーディング規則
 
 - デザイントークンは `C` オブジェクト（色・フォント・radius）、共通スタイルは `S` オブジェクト（インラインスタイル）
 - 新しい画面はすべて `App` の条件分岐（`page === "xxx"` の羅列）に追加し、`go()` で遷移する
-- `db.get/set` を経由してlocalStorageを操作する（直接アクセス禁止）
+- DB操作は `db` オブジェクト経由で行う
+- ユーザー管理は `localUser.get/set` を使用

@@ -3,12 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>アチE��ル</title>
+  <title>アツメル</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet" />
   <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
     html { font-size: 16px; }
@@ -24,21 +26,75 @@
   </style>
 </head>
 <body>
-  <div style='padding:8px 12px;background:#e6f5ee;border-bottom:1px solid #b7e1cb;font-family:sans-serif;font-size:14px;'>�V�ł͂�����: <a href='/' style='color:#0b4f32;font-weight:700;'>Next�ł��J��</a></div>
   <div id="root"></div>
 
   <script type="text/babel">
-    const { useState, useEffect, useRef } = React;
+    const { useState, useEffect, useRef, useCallback } = React;
+
+    /* ── Supabase初期化 ── */
+    const supabase = window.supabase.createClient(
+      window.SUPABASE_URL,
+      window.SUPABASE_ANON_KEY
+    );
 
     const genId = () => Math.random().toString(36).slice(2, 10);
     const fmtDate = (d) => new Date(d).toLocaleDateString("ja-JP", { year: "numeric", month: "long", day: "numeric" });
 
-    const db = {
-      get: (k) => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } },
-      set: (k, v) => localStorage.setItem(k, JSON.stringify(v)),
+    /* ── ローカルユーザー管理（メールをlocalStorageに保存） ── */
+    const localUser = {
+      get: () => { try { return JSON.parse(localStorage.getItem("atsumeru_user")); } catch { return null; } },
+      set: (v) => localStorage.setItem("atsumeru_user", JSON.stringify(v)),
     };
 
-    /* ── チE��イント�Eクン ── */
+    /* ── Supabase DB操作 ── */
+    const db = {
+      async getEvents(createdBy) {
+        const { data } = await supabase.from("events").select("*").eq("created_by", createdBy).order("created_at", { ascending: false });
+        return data || [];
+      },
+      async getEvent(id) {
+        const { data } = await supabase.from("events").select("*").eq("id", id).single();
+        return data || null;
+      },
+      async createEvent(ev) {
+        const { id, title, date, place, note, createdBy, createdAt, collecting, amount, payUrl } = ev;
+        await supabase.from("events").insert({
+          id, title, date, place, note,
+          created_by: createdBy, created_at: createdAt,
+          collecting, amount, pay_url: payUrl,
+        });
+      },
+      async updateEvent(id, fields) {
+        const mapped = {};
+        if ("collecting" in fields) mapped.collecting = fields.collecting;
+        if ("amount" in fields) mapped.amount = fields.amount;
+        if ("payUrl" in fields) mapped.pay_url = fields.payUrl;
+        await supabase.from("events").update(mapped).eq("id", id);
+      },
+      async getMembers(eventId) {
+        const { data } = await supabase.from("members").select("*").eq("event_id", eventId);
+        return data || [];
+      },
+      async upsertMember(eventId, name, rsvp) {
+        const { data: existing } = await supabase.from("members").select("*").eq("event_id", eventId).eq("name", name).maybeSingle();
+        if (existing) {
+          await supabase.from("members").update({ rsvp }).eq("id", existing.id);
+          return { ...existing, rsvp };
+        } else {
+          const m = { id: genId(), event_id: eventId, name, rsvp, paid: false, paid_at: null };
+          await supabase.from("members").insert(m);
+          return m;
+        }
+      },
+      async removeMember(memberId) {
+        await supabase.from("members").delete().eq("id", memberId);
+      },
+      async setPaid(memberId, paid) {
+        await supabase.from("members").update({ paid, paid_at: paid ? new Date().toISOString() : null }).eq("id", memberId);
+      },
+    };
+
+    /* ── デザイントークン ── */
     const C = {
       bg:          "#F5F4F1",
       surface:     "#FFFFFF",
@@ -47,23 +103,17 @@
       text:        "#1C1C1A",
       textSub:     "#6B6B67",
       textMuted:   "#A0A09C",
-
-      primary:     "#2D5A3D",   /* 深緁E*/
+      primary:     "#2D5A3D",
       primaryBg:   "#EEF4F0",
       primaryText: "#1A3D28",
-
       danger:      "#B91C1C",
       dangerBg:    "#FEF2F2",
-
       warn:        "#92400E",
       warnBg:      "#FFFBEB",
-
       success:     "#166534",
       successBg:   "#F0FDF4",
-
       neutral:     "#374151",
       neutralBg:   "#F9FAFB",
-
       font: "'Inter', 'Noto Sans JP', sans-serif",
       radius: "8px",
       radiusSm: "6px",
@@ -79,8 +129,6 @@
       },
       card:    { background: C.surface, borderRadius: C.radiusLg, border: `1px solid ${C.border}`, padding: "20px" },
       cardLg:  { background: C.surface, borderRadius: C.radiusLg, border: `1px solid ${C.border}`, padding: "28px 24px" },
-
-      /* ボタン */
       btn:    { display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6,
                 padding: "11px 20px", borderRadius: C.radius, fontSize: "0.875rem", fontWeight: 600,
                 border: "none", cursor: "pointer", fontFamily: C.font, width: "100%",
@@ -91,8 +139,6 @@
       btnDanger:  { background: C.danger, color: "#fff" },
       btnWarn:    { background: "#D97706", color: "#fff" },
       btnSm:      { padding: "7px 14px", fontSize: "0.8rem", width: "auto" },
-
-      /* フォーム */
       input:  { width: "100%", padding: "10px 12px", borderRadius: C.radiusSm,
                 border: `1px solid ${C.border}`, fontSize: "0.9rem",
                 fontFamily: C.font, background: C.bg, outline: "none",
@@ -100,19 +146,14 @@
                 color: C.text },
       label:  { display: "block", fontSize: "0.75rem", fontWeight: 600,
                 color: C.textSub, marginBottom: 5, letterSpacing: "0.03em" },
-
-      /* チE��スチE*/
       h1: { fontSize: "1.65rem", fontWeight: 700, letterSpacing: "-0.02em", lineHeight: 1.25, color: C.text },
       h2: { fontSize: "1.05rem", fontWeight: 700, letterSpacing: "-0.01em", color: C.text },
       sub: { fontSize: "0.83rem", color: C.textSub, lineHeight: 1.65 },
-
-      /* バッジ */
       badge: (bg, color) => ({
         display: "inline-flex", alignItems: "center", padding: "2px 10px",
         borderRadius: 100, fontSize: "0.7rem", fontWeight: 600,
         background: bg, color, letterSpacing: "0.01em",
       }),
-
       divider: { height: 1, background: C.border, margin: "20px 0" },
       anim: { animation: "fadeIn 0.18s ease" },
     };
@@ -132,12 +173,12 @@
           <div style={{ ...S.wrap, display: "flex", alignItems: "center", justifyContent: "space-between", height: 52 }}>
             <button onClick={goHome} style={{ fontSize: "0.95rem", fontWeight: 700, color: C.primary,
               background: "none", border: "none", fontFamily: C.font, cursor: "pointer", letterSpacing: "-0.01em" }}>
-              アチE��ル
+              アツメル
             </button>
             {user && (
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <span style={{ fontSize: "0.72rem", color: C.textMuted }}>{user}</span>
-                <button onClick={logout} style={{ ...S.btn, ...S.btnGhost, ...S.btnSm }}>ログアウチE/button>
+                <button onClick={logout} style={{ ...S.btn, ...S.btnGhost, ...S.btnSm }}>ログアウト</button>
               </div>
             )}
           </div>
@@ -145,16 +186,16 @@
       );
     }
 
-    /* ── ホ�Eム ── */
+    /* ── ホーム ── */
     function Home({ go, user }) {
       return (
         <div style={{ ...S.wrap, paddingTop: 48, paddingBottom: 80, ...S.anim }}>
           <div style={{ marginBottom: 40 }}>
             <h1 style={{ ...S.h1, marginBottom: 12 }}>
-              出欠も集金も、Ebr />これひとつで、E
+              出欠も集金も、<br />これひとつで。
             </h1>
             <p style={{ ...S.sub, maxWidth: 300 }}>
-              イベントを作ってURLを�E有するだけ、Ebr />出欠確認から集金まで一括管琁E��きます、E
+              イベントを作ってURLを共有するだけ。<br />出欠確認から集金まで一括管理できます。
             </p>
           </div>
 
@@ -163,17 +204,17 @@
               イベントをつくる
             </button>
             <button style={{ ...S.btn, ...S.btnGhost }} onClick={() => go(user ? "list" : "login")}>
-              マイイベンチE
+              マイイベント
             </button>
           </div>
 
           <div>
             <p style={{ fontSize: "0.7rem", fontWeight: 700, color: C.textMuted, marginBottom: 14,
-              letterSpacing: "0.08em", textTransform: "uppercase" }}>使ぁE��</p>
+              letterSpacing: "0.08em", textTransform: "uppercase" }}>使い方</p>
             {[
-              { step: "1", t: "イベントを作�E", d: "タイトルと日時だけでOK" },
-              { step: "2", t: "URLを�E朁E, d: "参加老E��そ�Eまま出欠回筁E },
-              { step: "3", t: "雁E��を管琁E, d: "支払い状況をひとめで確誁E },
+              { step: "1", t: "イベントを作成", d: "タイトルと日時だけでOK" },
+              { step: "2", t: "URLを共有", d: "参加者がそのまま出欠回答" },
+              { step: "3", t: "集金を管理", d: "支払い状況をひとめで確認" },
             ].map((x) => (
               <div key={x.step} style={{ display: "flex", alignItems: "flex-start", gap: 14,
                 padding: "14px 0", borderBottom: `1px solid ${C.border}` }}>
@@ -200,7 +241,7 @@
         const v = ref.current?.value || "";
         if (!v.includes("@")) { setErr(true); return; }
         setErr(false);
-        db.set("atsumeru_user", v);
+        localUser.set(v);
         setUser(v);
         setOk(true);
         setTimeout(() => go("list"), 700);
@@ -209,7 +250,7 @@
         <div style={{ ...S.wrap, paddingTop: 48, ...S.anim }}>
           <div style={S.cardLg}>
             <h2 style={{ ...S.h2, marginBottom: 4 }}>ログイン</h2>
-            <p style={{ ...S.sub, marginBottom: 24 }}>メールアドレスだけで利用できまぁE/p>
+            <p style={{ ...S.sub, marginBottom: 24 }}>メールアドレスだけで利用できます</p>
             {ok ? (
               <div style={{ textAlign: "center", padding: "24px 0", background: C.successBg,
                 borderRadius: C.radius, color: C.success, fontWeight: 600 }}>
@@ -222,7 +263,7 @@
                     type="email" inputMode="email" autoCapitalize="none"
                     autoCorrect="off" spellCheck={false} placeholder="you@example.com" defaultValue=""
                     onKeyDown={(e) => e.key === "Enter" && handle()} />
-                  {err && <p style={{ fontSize: "0.72rem", color: C.danger, marginTop: 4 }}>正しいメールアドレスを�E力してください</p>}
+                  {err && <p style={{ fontSize: "0.72rem", color: C.danger, marginTop: 4 }}>正しいメールアドレスを入力してください</p>}
                 </Field>
                 <button style={{ ...S.btn, ...S.btnPrimary }} onClick={handle}>ログイン</button>
               </>
@@ -232,7 +273,7 @@
       );
     }
 
-    /* ── イベント作�E ── */
+    /* ── イベント作成 ── */
     function Create({ go, user }) {
       const titleRef = useRef(null);
       const dateRef   = useRef(null);
@@ -242,11 +283,13 @@
       const payUrlRef = useRef(null);
       const [err, setErr] = useState(false);
       const [enableCollect, setEnableCollect] = useState(false);
+      const [saving, setSaving] = useState(false);
 
-      const handle = () => {
+      const handle = async () => {
         const title = titleRef.current?.value?.trim();
         if (!title) { setErr(true); return; }
         setErr(false);
+        setSaving(true);
         const amount = enableCollect ? (Number(amountRef.current?.value) || 0) : 0;
         const payUrl = enableCollect ? (payUrlRef.current?.value?.trim() || "") : "";
         const ev = {
@@ -255,32 +298,31 @@
           place: placeRef.current?.value || "",
           note:  noteRef.current?.value  || "",
           createdBy: user, createdAt: new Date().toISOString(),
-          members: [], collecting: enableCollect && amount > 0, amount, payUrl,
+          collecting: enableCollect && amount > 0, amount, payUrl,
         };
-        const all = db.get("atsumeru_events") || [];
-        all.push(ev);
-        db.set("atsumeru_events", all);
+        await db.createEvent(ev);
+        setSaving(false);
         go("manage", ev.id);
       };
 
       return (
         <div style={{ ...S.wrap, paddingTop: 28, paddingBottom: 80, ...S.anim }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
-            <button style={{ ...S.btn, ...S.btnGhost, ...S.btnSm }} onClick={() => go("list")}>ↁE戻めE/button>
-            <h2 style={S.h2}>イベントを作�E</h2>
+            <button style={{ ...S.btn, ...S.btnGhost, ...S.btnSm }} onClick={() => go("list")}>← 戻る</button>
+            <h2 style={S.h2}>イベントを作成</h2>
           </div>
           <div style={S.cardLg}>
             <Field label="イベント名 *">
               <input ref={titleRef} style={{ ...S.input, borderColor: err ? C.danger : C.border }}
-                type="text" placeholder="例！E月�E飲み企E defaultValue=""
+                type="text" placeholder="例：3月の飲み会" defaultValue=""
                 onKeyDown={(e) => e.key === "Enter" && handle()} />
-              {err && <p style={{ fontSize: "0.72rem", color: C.danger, marginTop: 4 }}>イベント名を�E力してください</p>}
+              {err && <p style={{ fontSize: "0.72rem", color: C.danger, marginTop: 4 }}>イベント名を入力してください</p>}
             </Field>
-            <Field label="日時（任意！E>
+            <Field label="日時（任意）">
               <input ref={dateRef} style={S.input} type="datetime-local" defaultValue="" />
             </Field>
-            <Field label="場所�E�任意！E>
-              <input ref={placeRef} style={S.input} type="text" placeholder="例：渋谷の屁E�E屁E defaultValue="" />
+            <Field label="場所（任意）">
+              <input ref={placeRef} style={S.input} type="text" placeholder="例：渋谷の居酒屋" defaultValue="" />
             </Field>
             <Field label="メモ（任意）">
               <input ref={noteRef} style={S.input} type="text" placeholder="例：遅刻する場合は連絡を" defaultValue="" />
@@ -303,7 +345,8 @@
                 </Field>
               </>
             )}
-            <button style={{ ...S.btn, ...S.btnPrimary, marginTop: 4 }} onClick={handle}>作成する</button>
+            <button style={{ ...S.btn, ...S.btnPrimary, marginTop: 4, opacity: saving ? 0.6 : 1 }}
+              onClick={handle} disabled={saving}>{saving ? "作成中..." : "作成する"}</button>
           </div>
         </div>
       );
@@ -311,12 +354,39 @@
 
     /* ── イベント一覧 ── */
     function EventList({ go, user }) {
-      const events = (db.get("atsumeru_events") || []).filter((e) => e.createdBy === user);
+      const [events, setEvents] = useState([]);
+      const [members, setMembers] = useState({});
+      const [loading, setLoading] = useState(true);
+
+      useEffect(() => {
+        let cancelled = false;
+        const load = async () => {
+          const evs = await db.getEvents(user);
+          if (cancelled) return;
+          setEvents(evs);
+          const memberMap = {};
+          for (const ev of evs) {
+            memberMap[ev.id] = await db.getMembers(ev.id);
+          }
+          if (cancelled) return;
+          setMembers(memberMap);
+          setLoading(false);
+        };
+        load();
+        return () => { cancelled = true; };
+      }, [user]);
+
+      if (loading) return (
+        <div style={{ ...S.wrap, paddingTop: 48, textAlign: "center" }}>
+          <p style={{ color: C.textMuted }}>読み込み中...</p>
+        </div>
+      );
+
       return (
         <div style={{ ...S.wrap, paddingTop: 28, paddingBottom: 80, ...S.anim }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
-            <h2 style={S.h2}>マイイベンチE/h2>
-            <button style={{ ...S.btn, ...S.btnPrimary, ...S.btnSm }} onClick={() => go("create")}>+ 新規作�E</button>
+            <h2 style={S.h2}>マイイベント</h2>
+            <button style={{ ...S.btn, ...S.btnPrimary, ...S.btnSm }} onClick={() => go("create")}>+ 新規作成</button>
           </div>
 
           {events.length === 0 ? (
@@ -325,14 +395,15 @@
                 まだイベントがありません
               </p>
               <button style={{ ...S.btn, ...S.btnPrimary }} onClick={() => go("create")}>
-                最初�Eイベントを作�E
+                最初のイベントを作成
               </button>
             </div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {events.map((ev) => {
-                const yes  = ev.members.filter((m) => m.rsvp === "yes").length;
-                const paid = ev.members.filter((m) => m.paid).length;
+                const mems = members[ev.id] || [];
+                const yes  = mems.filter((m) => m.rsvp === "yes").length;
+                const paid = mems.filter((m) => m.paid).length;
                 return (
                   <div key={ev.id} style={{ ...S.card, cursor: "pointer" }} onClick={() => go("manage", ev.id)}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
@@ -340,7 +411,7 @@
                         <div style={{ fontWeight: 600, fontSize: "0.9rem", marginBottom: 3,
                           whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{ev.title}</div>
                         <div style={{ fontSize: "0.75rem", color: C.textMuted }}>
-                          {ev.date ? fmtDate(ev.date) : "日時未宁E}{ev.place ? `　${ev.place}` : ""}
+                          {ev.date ? fmtDate(ev.date) : "日時未定"}{ev.place ? `　${ev.place}` : ""}
                         </div>
                       </div>
                       <div style={{ display: "flex", gap: 6, flexShrink: 0, marginLeft: 10 }}>
@@ -348,7 +419,7 @@
                         {ev.collecting && (
                           <span style={S.badge(paid === yes && yes > 0 ? C.successBg : C.warnBg,
                             paid === yes && yes > 0 ? C.success : C.warn)}>
-                            雁E�� {paid}/{yes}
+                            集金 {paid}/{yes}
                           </span>
                         )}
                       </div>
@@ -362,7 +433,7 @@
       );
     }
 
-    /* ── メンバ�E行（幹事用�E�E── */
+    /* ── メンバー行（幹事用） ── */
     function MemberRow({ m, onRemove }) {
       return (
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between",
@@ -375,65 +446,53 @@
       );
     }
 
-    /* ── 管琁E��面 ── */
+    /* ── 管理画面 ── */
     function Manage({ eventId, go }) {
       const [ev, setEv] = useState(null);
+      const [mems, setMems] = useState([]);
       const [tab, setTab] = useState("rsvp");
       const [showSetup, setShowSetup] = useState(false);
       const amountRef = useRef(null);
       const payUrlRef = useRef(null);
 
-      const load = () => {
-        const all = db.get("atsumeru_events") || [];
-        setEv(all.find((e) => e.id === eventId) || null);
-      };
-      useEffect(() => {
-        load();
-        const onStorage = (e) => { if (e.key === "atsumeru_events") load(); };
-        window.addEventListener("storage", onStorage);
-        const timer = setInterval(load, 1000);
-        return () => { window.removeEventListener("storage", onStorage); clearInterval(timer); };
+      const load = useCallback(async () => {
+        const [event, members] = await Promise.all([db.getEvent(eventId), db.getMembers(eventId)]);
+        setEv(event);
+        setMems(members);
       }, [eventId]);
 
-      const save = (updated) => {
-        const all = db.get("atsumeru_events") || [];
-        const idx = all.findIndex((e) => e.id === eventId);
-        if (idx >= 0) all[idx] = updated;
-        db.set("atsumeru_events", all);
-        setEv(updated);
-      };
+      useEffect(() => {
+        load();
+        /* Supabase Realtime: membersテーブルの変更を監視 */
+        const channel = supabase.channel(`manage-${eventId}`)
+          .on("postgres_changes", { event: "*", schema: "public", table: "members", filter: `event_id=eq.${eventId}` }, () => load())
+          .on("postgres_changes", { event: "*", schema: "public", table: "events", filter: `id=eq.${eventId}` }, () => load())
+          .subscribe();
+        return () => { supabase.removeChannel(channel); };
+      }, [eventId, load]);
 
-      const startCollecting = () => {
+      const startCollecting = async () => {
         const amount = Number(amountRef.current?.value);
         const payUrl = payUrlRef.current?.value?.trim() || "";
         if (!amount || amount <= 0) return;
-        save({ ...ev, collecting: true, amount, payUrl });
+        await db.updateEvent(eventId, { collecting: true, amount, payUrl });
         setShowSetup(false);
+        load();
       };
 
-      const togglePaid = (memberId) => {
-        save({
-          ...ev,
-          members: ev.members.map((m) =>
-            m.id === memberId
-              ? { ...m, paid: !m.paid, paidAt: !m.paid ? new Date().toISOString() : null }
-              : m
-          ),
-        });
+      const togglePaid = async (member) => {
+        await db.setPaid(member.id, !member.paid);
+        load();
       };
 
-      const removeMember = (memberId) => {
-        save({ ...ev, members: ev.members.filter((m) => m.id !== memberId) });
+      const removeMember = async (memberId) => {
+        await db.removeMember(memberId);
+        load();
       };
 
       if (!ev) return null;
 
-      const shareUrl = (() => {
-        const data = { id: ev.id, title: ev.title, date: ev.date, place: ev.place,
-          note: ev.note, collecting: ev.collecting, amount: ev.amount, payUrl: ev.payUrl };
-        const enc = btoa(unescape(encodeURIComponent(JSON.stringify(data))));
-        return `${window.location.origin}${window.location.pathname}?event=${ev.id}&d=${enc}`;
-      })();
+      const shareUrl = `${window.location.origin}${window.location.pathname}?event=${eventId}`;
 
       const copyLink = () => {
         navigator.clipboard?.writeText(shareUrl).then(() => {
@@ -441,19 +500,19 @@
         }).catch(() => { prompt("このURLを参加者へ送ってください。", shareUrl); });
       };
 
-      const yesMembers = ev.members.filter((m) => m.rsvp === "yes");
-      const noMembers = ev.members.filter((m) => m.rsvp === "no");
-      const maybeMembers = ev.members.filter((m) => m.rsvp === "maybe");
+      const yesMembers = mems.filter((m) => m.rsvp === "yes");
+      const noMembers = mems.filter((m) => m.rsvp === "no");
+      const maybeMembers = mems.filter((m) => m.rsvp === "maybe");
       const paidCount = yesMembers.filter((m) => m.paid).length;
 
       return (
         <div style={{ ...S.wrap, paddingTop: 20, paddingBottom: 80, ...S.anim }}>
-          <button style={{ ...S.btn, ...S.btnGhost, ...S.btnSm, marginBottom: 16 }} onClick={() => go("list")}>戻めE/button>
+          <button style={{ ...S.btn, ...S.btnGhost, ...S.btnSm, marginBottom: 16 }} onClick={() => go("list")}>戻る</button>
 
           <div style={{ ...S.card, marginBottom: 12 }}>
             <h2 style={{ ...S.h2, marginBottom: 4 }}>{ev.title}</h2>
             <p style={{ fontSize: "0.78rem", color: C.textMuted }}>
-              {ev.date ? fmtDate(ev.date) : "日時未宁E}{ev.place ? `　${ev.place}` : ""}
+              {ev.date ? fmtDate(ev.date) : "日時未定"}{ev.place ? `　${ev.place}` : ""}
             </p>
             {ev.note && <p style={{ fontSize: "0.78rem", color: C.textSub, marginTop: 6 }}>{ev.note}</p>}
             <div style={S.divider} />
@@ -466,26 +525,26 @@
                 value={shareUrl}
                 onFocus={(e) => e.target.select()}
               />
-              <button style={{ ...S.btn, ...S.btnPrimary, ...S.btnSm }} onClick={copyLink}>コピ�E</button>
+              <button style={{ ...S.btn, ...S.btnPrimary, ...S.btnSm }} onClick={copyLink}>コピー</button>
             </div>
 
             <button style={{ ...S.btn, ...S.btnGhost }} onClick={() => setShowSetup(!showSetup)}>
-              {ev.collecting ? "雁E��設定を変更" : "雁E��を開姁E}
+              {ev.collecting ? "集金設定を変更" : "集金を開始"}
             </button>
 
             {showSetup && (
               <div style={{ marginTop: 16, padding: "16px", background: C.bg, borderRadius: C.radius }}>
-                <Field label="1人あたり�E金顁E>
+                <Field label="1人あたりの金額">
                   <input ref={amountRef} style={S.input} type="number" inputMode="numeric" placeholder="4500" defaultValue={ev.amount} />
                 </Field>
-                <Field label="送E��URL�E�EayPayなど・任意！E hint="入力すると参加老E��送E��ボタンが表示されまぁE>
+                <Field label="送金URL（PayPayなど・任意）" hint="入力すると参加者に送金ボタンが表示されます">
                   <input ref={payUrlRef} style={S.input} type="url" inputMode="url"
                     autoCapitalize="none" autoCorrect="off" spellCheck={false}
-                    placeholder="https://pay.paypay.ne.jp/..." defaultValue={ev.payUrl} />
+                    placeholder="https://pay.paypay.ne.jp/..." defaultValue={ev.pay_url} />
                 </Field>
                 <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
                   <button style={{ ...S.btn, ...S.btnGhost, flex: 1 }} onClick={() => setShowSetup(false)}>キャンセル</button>
-                  <button style={{ ...S.btn, ...S.btnPrimary, flex: 1 }} onClick={startCollecting}>雁E��を開姁E/button>
+                  <button style={{ ...S.btn, ...S.btnPrimary, flex: 1 }} onClick={startCollecting}>集金を開始</button>
                 </div>
               </div>
             )}
@@ -496,12 +555,12 @@
               ...S.btn, ...S.btnSm,
               background: tab === "rsvp" ? C.primary : C.border,
               color: tab === "rsvp" ? "#fff" : C.text,
-            }}>出欠 ({ev.members.length})</button>
+            }}>出欠 ({mems.length})</button>
             <button onClick={() => setTab("collect")} style={{
               ...S.btn, ...S.btnSm,
               background: tab === "collect" ? C.primary : C.border,
               color: tab === "collect" ? "#fff" : C.text,
-            }}>雁E�� ({yesMembers.length})</button>
+            }}>集金 ({yesMembers.length})</button>
           </div>
 
           {tab === "rsvp" && (
@@ -514,7 +573,7 @@
               )}
               {maybeMembers.length > 0 && (
                 <div style={{ marginBottom: 20 }}>
-                  <p style={{ fontSize: "0.75rem", fontWeight: 700, color: C.warn, marginBottom: 8 }}>未宁E({maybeMembers.length})</p>
+                  <p style={{ fontSize: "0.75rem", fontWeight: 700, color: C.warn, marginBottom: 8 }}>未定 ({maybeMembers.length})</p>
                   {maybeMembers.map((m) => <MemberRow key={m.id} m={m} onRemove={() => removeMember(m.id)} />)}
                 </div>
               )}
@@ -531,22 +590,22 @@
             <div>
               {!ev.collecting && (
                 <div style={{ marginBottom: 12, padding: "12px", background: C.neutralBg, borderRadius: C.radius }}>
-                  <p style={{ fontSize: "0.78rem", color: C.textMuted }}>雁E��を開始するとチェチE��できまぁE/p>
+                  <p style={{ fontSize: "0.78rem", color: C.textMuted }}>集金を開始するとチェックできます</p>
                 </div>
               )}
               {ev.collecting && (
                 <>
                   <div style={{ marginBottom: 16, padding: "12px", background: C.neutralBg, borderRadius: C.radius, textAlign: "center" }}>
-                    <p style={{ fontSize: "0.7rem", color: C.textMuted }}>雁E��状況E/p>
+                    <p style={{ fontSize: "0.7rem", color: C.textMuted }}>集金状況</p>
                     <p style={{ fontSize: "1.2rem", fontWeight: 700, color: C.text, marginTop: 4 }}>{paidCount} / {yesMembers.length}</p>
                   </div>
                   {yesMembers.map((m) => (
                     <div key={m.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: `1px solid ${C.border}` }}>
                       <span style={{ fontSize: "0.875rem", color: C.text }}>{m.name}</span>
-                      <button onClick={() => togglePaid(m.id)} style={{
+                      <button onClick={() => togglePaid(m)} style={{
                         ...S.btn, ...S.btnSm,
                         background: m.paid ? C.success : C.border, color: m.paid ? "#fff" : C.text,
-                      }}>{m.paid ? "渁E : "未"}</button>
+                      }}>{m.paid ? "済" : "未"}</button>
                     </div>
                   ))}
                 </>
@@ -556,49 +615,32 @@
         </div>
       );
     }
+
+    /* ── 参加者ページ ── */
     function ParticipantPage({ eventId }) {
       const [ev, setEv] = useState(null);
+      const [mems, setMems] = useState([]);
       const [step, setStep] = useState("rsvp");
       const [myName, setMyName] = useState("");
+      const [loading, setLoading] = useState(true);
       const nameRef = useRef(null);
       const hydratedFromUrl = useRef(false);
 
-      const getCurrentEvent = () => {
-        const all = db.get("atsumeru_events") || [];
-        return all.find((e) => e.id === eventId) || null;
-      };
-
-      const seedFromUrl = () => {
-        const enc = new URLSearchParams(window.location.search).get("d");
-        if (!enc) return null;
-        try {
-          const data = JSON.parse(decodeURIComponent(escape(atob(enc))));
-          if (!data || data.id !== eventId) return null;
-          const all = db.get("atsumeru_events") || [];
-          if (!all.find((e) => e.id === eventId)) {
-            all.push({ ...data, members: [] });
-            db.set("atsumeru_events", all);
-          }
-          return (db.get("atsumeru_events") || []).find((e) => e.id === eventId) || null;
-        } catch { return null; }
-      };
-
-      const writeNameToUrl = (name) => {
-        const u = new URL(window.location.href);
-        u.searchParams.set("event", eventId);
-        u.searchParams.set("name", name);
-        window.history.replaceState({}, "", u.toString());
-      };
-
-      const load = () => setEv(getCurrentEvent() || seedFromUrl());
+      const load = useCallback(async () => {
+        const [event, members] = await Promise.all([db.getEvent(eventId), db.getMembers(eventId)]);
+        setEv(event);
+        setMems(members);
+        setLoading(false);
+      }, [eventId]);
 
       useEffect(() => {
         load();
-        const onStorage = (e) => { if (e.key === "atsumeru_events") load(); };
-        window.addEventListener("storage", onStorage);
-        const timer = setInterval(load, 1000);
-        return () => { window.removeEventListener("storage", onStorage); clearInterval(timer); };
-      }, [eventId]);
+        const channel = supabase.channel(`participant-${eventId}`)
+          .on("postgres_changes", { event: "*", schema: "public", table: "members", filter: `event_id=eq.${eventId}` }, () => load())
+          .on("postgres_changes", { event: "*", schema: "public", table: "events", filter: `id=eq.${eventId}` }, () => load())
+          .subscribe();
+        return () => { supabase.removeChannel(channel); };
+      }, [eventId, load]);
 
       useEffect(() => {
         if (step !== "paying") return;
@@ -610,48 +652,48 @@
       }, [step]);
 
       useEffect(() => {
-        if (hydratedFromUrl.current || !ev) return;
+        if (hydratedFromUrl.current || !ev || mems.length === 0) return;
         const n = (new URLSearchParams(window.location.search).get("name") || "").trim();
         hydratedFromUrl.current = true;
         if (!n) return;
-        const member = ev.members.find((m) => m.name === n);
+        const member = mems.find((m) => m.name === n);
         if (!member) return;
         setMyName(n);
         if (ev.collecting && member.rsvp === "yes") setStep("rsvp_done");
-      }, [ev]);
+      }, [ev, mems]);
 
-      const submitRsvp = (rsvp) => {
+      const writeNameToUrl = (name) => {
+        const u = new URL(window.location.href);
+        u.searchParams.set("event", eventId);
+        u.searchParams.set("name", name);
+        window.history.replaceState({}, "", u.toString());
+      };
+
+      const submitRsvp = async (rsvp) => {
         const name = nameRef.current?.value?.trim();
-        if (!name) { alert("名前を�E力してください"); return; }
-        const all = db.get("atsumeru_events") || [];
-        const updated = all.map((e) => {
-          if (e.id !== eventId) return e;
-          const existing = e.members.find((m) => m.name === name);
-          if (existing) return { ...e, members: e.members.map((m) => m.name === name ? { ...m, rsvp } : m) };
-          return { ...e, members: [...e.members, { id: genId(), name, rsvp, paid: false, paidAt: null }] };
-        });
-        db.set("atsumeru_events", updated);
-        const nextEv = updated.find((e) => e.id === eventId) || null;
-        if (!nextEv) { alert("イベントが見つかりません"); return; }
-        setEv(nextEv);
+        if (!name) { alert("名前を入力してください"); return; }
+        await db.upsertMember(eventId, name, rsvp);
+        await load();
         writeNameToUrl(name);
-        if (rsvp === "yes" && nextEv.collecting) { startPaymentFlow(name); return; }
         setMyName(name);
+        if (rsvp === "yes" && ev.collecting) {
+          startPaymentFlow(name);
+          return;
+        }
         setStep("rsvp_done");
       };
 
-      const startPaymentFlow = (name) => {
-        const current = getCurrentEvent();
-        if (!current) return;
-        const member = current.members.find((m) => m.name === name);
-        if (!member || member.rsvp !== "yes") { alert("参加惁E��が見つかりません"); return; }
-        if (member.paid) { setMyName(name); setEv(current); setStep("rsvp_done"); return; }
+      const startPaymentFlow = async (name) => {
+        await load();
+        const member = mems.find((m) => m.name === name) ||
+          (await db.getMembers(eventId)).find((m) => m.name === name);
+        if (!member || member.rsvp !== "yes") { alert("参加情報が見つかりません"); return; }
+        if (member.paid) { setMyName(name); setStep("rsvp_done"); return; }
         writeNameToUrl(name);
         setMyName(name);
-        setEv(current);
-        if (current.payUrl) {
+        if (ev.pay_url) {
           setStep("paying");
-          setTimeout(() => { window.open(current.payUrl, "_blank"); }, 100);
+          setTimeout(() => { window.open(ev.pay_url, "_blank"); }, 100);
         } else {
           setStep("confirm");
         }
@@ -662,21 +704,16 @@
         startPaymentFlow(myName);
       };
 
-      const confirmPaid = () => {
-        const all = db.get("atsumeru_events") || [];
-        const updated = all.map((e) => {
-          if (e.id !== eventId) return e;
-          return { ...e, members: e.members.map((m) =>
-            m.name === myName ? { ...m, paid: true, paidAt: new Date().toISOString() } : m
-          )};
-        });
-        db.set("atsumeru_events", updated);
+      const confirmPaid = async () => {
+        const member = mems.find((m) => m.name === myName);
+        if (member) {
+          await db.setPaid(member.id, true);
+        }
         setStep("done");
       };
 
       const handlePayLaterBySelection = (name) => {
-        if (!name) return;
-        const member = (ev?.members || []).find((m) => m.name === name);
+        const member = mems.find((m) => m.name === name);
         if (!member || member.rsvp !== "yes" || member.paid) return;
         writeNameToUrl(name);
         startPaymentFlow(name);
@@ -685,9 +722,18 @@
       const Header = () => (
         <div style={{ borderBottom: `1px solid ${C.border}`, background: C.surface, marginBottom: 24 }}>
           <div style={{ ...S.wrap, height: 52, display: "flex", alignItems: "center" }}>
-            <span style={{ fontSize: "0.9rem", fontWeight: 700, color: C.primary }}>アチE��ル</span>
+            <span style={{ fontSize: "0.9rem", fontWeight: 700, color: C.primary }}>アツメル</span>
           </div>
         </div>
+      );
+
+      if (loading) return (
+        <>
+          <Header />
+          <div style={{ ...S.wrap, textAlign: "center", paddingTop: 48 }}>
+            <p style={{ color: C.textMuted }}>読み込み中...</p>
+          </div>
+        </>
       );
 
       if (!ev) return (
@@ -706,9 +752,9 @@
           <Header />
           <div style={{ ...S.wrap, paddingTop: 24, ...S.anim }}>
             <div style={{ ...S.cardLg, textAlign: "center", padding: "44px 24px", borderColor: C.success }}>
-              <div style={{ fontSize: "0.75rem", fontWeight: 700, color: C.success, letterSpacing: "0.06em", marginBottom: 12 }}>完亁E/div>
+              <div style={{ fontSize: "0.75rem", fontWeight: 700, color: C.success, letterSpacing: "0.06em", marginBottom: 12 }}>完了</div>
               <h2 style={{ ...S.h2, marginBottom: 8 }}>支払いを報告しました</h2>
-              <p style={S.sub}>幹事に反映されました。ありがとぁE��ざいます、E/p>
+              <p style={S.sub}>幹事に反映されました。ありがとうございます。</p>
             </div>
           </div>
         </>
@@ -719,11 +765,11 @@
           <Header />
           <div style={{ ...S.wrap, paddingTop: 24, ...S.anim }}>
             <div style={{ ...S.cardLg, textAlign: "center" }}>
-              <p style={{ fontSize: "0.75rem", fontWeight: 700, color: C.textMuted, letterSpacing: "0.06em", marginBottom: 12 }}>確誁E/p>
-              <h2 style={{ ...S.h2, marginBottom: 8 }}>送E��は完亁E��ましたか！E/h2>
-              <p style={{ ...S.sub, marginBottom: 28 }}>{myName}さんの支払いを記録しまぁE/p>
-              <button style={{ ...S.btn, ...S.btnSuccess, marginBottom: 10 }} onClick={confirmPaid}>はぁE��E��E��しました</button>
-              <button style={{ ...S.btn, ...S.btnGhost }} onClick={() => setStep("rsvp_done")}>まだしてぁE��ぁE/button>
+              <p style={{ fontSize: "0.75rem", fontWeight: 700, color: C.textMuted, letterSpacing: "0.06em", marginBottom: 12 }}>確認</p>
+              <h2 style={{ ...S.h2, marginBottom: 8 }}>送金は完了しましたか？</h2>
+              <p style={{ ...S.sub, marginBottom: 28 }}>{myName}さんの支払いを記録します</p>
+              <button style={{ ...S.btn, ...S.btnSuccess, marginBottom: 10 }} onClick={confirmPaid}>はい、送金しました</button>
+              <button style={{ ...S.btn, ...S.btnGhost }} onClick={() => setStep("rsvp_done")}>まだしていない</button>
             </div>
           </div>
         </>
@@ -735,16 +781,16 @@
           <div style={{ ...S.wrap, paddingTop: 24, textAlign: "center", ...S.anim }}>
             <div style={S.cardLg}>
               <div style={{ width: 36, height: 36, borderRadius: "50%", border: `2px solid ${C.border}`, borderTopColor: C.primary, animation: "spin 0.9s linear infinite", margin: "0 auto 20px" }} />
-              <h2 style={{ ...S.h2, marginBottom: 8 }}>送E��アプリを開ぁE��ぁE��ぁE/h2>
-              <p style={{ ...S.sub, marginBottom: 24 }}>送E��が終わったらこ�Eペ�Eジに戻ってください</p>
-              <button style={{ ...S.btn, ...S.btnGhost }} onClick={() => setStep("confirm")}>送E��が終わっぁE/button>
+              <h2 style={{ ...S.h2, marginBottom: 8 }}>送金アプリを開いています</h2>
+              <p style={{ ...S.sub, marginBottom: 24 }}>送金が終わったらこのページに戻ってください</p>
+              <button style={{ ...S.btn, ...S.btnGhost }} onClick={() => setStep("confirm")}>送金が終わった</button>
             </div>
           </div>
         </>
       );
 
-      const yesMembers = ev.members.filter((m) => m.rsvp === "yes");
-      const myMember = myName ? ev.members.find((m) => m.name === myName) : null;
+      const yesMembers = mems.filter((m) => m.rsvp === "yes");
+      const myMember = myName ? mems.find((m) => m.name === myName) : null;
 
       if (step === "rsvp_done") return (
         <>
@@ -752,39 +798,39 @@
           <div style={{ ...S.wrap, paddingBottom: 60, ...S.anim }}>
             <div style={S.cardLg}>
               <div style={{ textAlign: "center", marginBottom: 20 }}>
-                <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 40, height: 40, borderRadius: "50%", background: C.successBg, color: C.success, fontSize: "1rem", marginBottom: 12 }}>✁E/div>
+                <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 40, height: 40, borderRadius: "50%", background: C.successBg, color: C.success, fontSize: "1rem", marginBottom: 12 }}>✓</div>
                 <h2 style={{ ...S.h2, marginBottom: 4 }}>回答しました</h2>
-                <p style={{ fontSize: "0.8rem", color: C.textMuted }}>{myName}さん �E�E{myMember?.rsvp === "yes" ? "参加" : myMember?.rsvp === "no" ? "不参加" : "未宁E}</p>
+                <p style={{ fontSize: "0.8rem", color: C.textMuted }}>{myName}さん → {myMember?.rsvp === "yes" ? "参加" : myMember?.rsvp === "no" ? "不参加" : "未定"}</p>
               </div>
 
               {ev.collecting && myMember?.rsvp === "yes" && !myMember?.paid && (
                 <div style={{ background: C.bg, borderRadius: C.radius, padding: 18, marginBottom: 4 }}>
                   <div style={{ textAlign: "center", marginBottom: 14 }}>
                     <div style={{ fontSize: "1.5rem", fontWeight: 700, color: C.text, letterSpacing: "-0.02em" }}>¥{ev.amount.toLocaleString()}</div>
-                    <p style={{ fontSize: "0.72rem", color: C.textMuted, marginTop: 2 }}>お支払い金顁E/p>
+                    <p style={{ fontSize: "0.72rem", color: C.textMuted, marginTop: 2 }}>お支払い金額</p>
                   </div>
-                  {ev.payUrl
-                    ? <button style={{ ...S.btn, background: "#E00020", color: "#fff" }} onClick={openPayLink}>PayPayで送E��する</button>
-                    : <button style={{ ...S.btn, ...S.btnPrimary }} onClick={() => setStep("confirm")}>送E��したので報告すめE/button>
+                  {ev.pay_url
+                    ? <button style={{ ...S.btn, background: "#E00020", color: "#fff" }} onClick={openPayLink}>PayPayで送金する</button>
+                    : <button style={{ ...S.btn, ...S.btnPrimary }} onClick={() => setStep("confirm")}>送金したので報告する</button>
                   }
                 </div>
               )}
 
               {ev.collecting && myMember?.paid && (
                 <div style={{ background: C.successBg, borderRadius: C.radius, padding: 16, textAlign: "center", marginBottom: 4 }}>
-                  <span style={{ fontSize: "0.875rem", fontWeight: 600, color: C.success }}>支払い済みでぁE/span>
+                  <span style={{ fontSize: "0.875rem", fontWeight: 600, color: C.success }}>支払い済みです</span>
                 </div>
               )}
 
               {yesMembers.length > 0 && (
                 <div style={{ marginTop: 20, borderTop: `1px solid ${C.border}`, paddingTop: 16 }}>
-                  <p style={{ fontSize: "0.72rem", fontWeight: 700, color: C.textMuted, marginBottom: 8, letterSpacing: "0.03em" }}>参加老E��{yesMembers.length}吁E/p>
+                  <p style={{ fontSize: "0.72rem", fontWeight: 700, color: C.textMuted, marginBottom: 8, letterSpacing: "0.03em" }}>参加者　{yesMembers.length}人</p>
                   {yesMembers.map((m) => (
                     <div key={m.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "6px 0" }}>
                       <span style={{ fontSize: "0.85rem", color: C.text }}>{m.name}</span>
                       {ev.collecting && (
                         <span style={S.badge(m.paid ? C.successBg : C.warnBg, m.paid ? C.success : C.warn)}>
-                          {m.paid ? "渁E : "未"}
+                          {m.paid ? "済" : "未"}
                         </span>
                       )}
                     </div>
@@ -802,30 +848,29 @@
           <div style={{ ...S.wrap, paddingBottom: 60, ...S.anim }}>
             <div style={S.cardLg}>
               <h2 style={{ ...S.h2, marginBottom: 4 }}>{ev.title}</h2>
-              <p style={{ fontSize: "0.78rem", color: C.textMuted, marginBottom: 2 }}>{ev.date ? fmtDate(ev.date) : "日時未宁E}{ev.place ? `　${ev.place}` : ""}</p>
+              <p style={{ fontSize: "0.78rem", color: C.textMuted, marginBottom: 2 }}>{ev.date ? fmtDate(ev.date) : "日時未定"}{ev.place ? `　${ev.place}` : ""}</p>
               {ev.note && <p style={{ fontSize: "0.78rem", color: C.textSub, marginTop: 4 }}>{ev.note}</p>}
 
               <div style={S.divider} />
 
-              {/* 出欠を回答すめE*/}
-              <p style={{ fontWeight: 600, fontSize: "0.875rem", marginBottom: 14, color: C.text }}>出欠を回答すめE/p>
+              <p style={{ fontWeight: 600, fontSize: "0.875rem", marginBottom: 14, color: C.text }}>出欠を回答する</p>
               <Field label="名前">
-                <input ref={nameRef} style={S.input} type="text" placeholder="お名剁E defaultValue="" />
+                <input ref={nameRef} style={S.input} type="text" placeholder="お名前" defaultValue="" />
               </Field>
               <div className="rsvp-actions">
                 <button style={{ ...S.btn, ...S.btnSuccess, flex: 1 }} onClick={() => submitRsvp("yes")}>参加</button>
-                <button style={{ ...S.btn, ...S.btnWarn,   flex: 1 }} onClick={() => submitRsvp("maybe")}>未宁E/button>
+                <button style={{ ...S.btn, ...S.btnWarn,   flex: 1 }} onClick={() => submitRsvp("maybe")}>未定</button>
                 <button style={{ ...S.btn, ...S.btnDanger, flex: 1 }} onClick={() => submitRsvp("no")}>不参加</button>
               </div>
 
               {/* あとから支払う */}
               {ev.collecting && (() => {
-                const unpaid = ev.members.filter((m) => m.rsvp === "yes" && !m.paid);
+                const unpaid = mems.filter((m) => m.rsvp === "yes" && !m.paid);
                 if (unpaid.length === 0) return null;
                 return (
                   <div style={{ marginTop: 20, padding: "16px", background: C.bg, borderRadius: C.radius, border: `1px solid ${C.border}` }}>
                     <p style={{ fontSize: "0.75rem", fontWeight: 700, color: C.textSub, marginBottom: 2 }}>あとから支払う</p>
-                    <p style={{ fontSize: "0.72rem", color: C.textMuted, marginBottom: 12 }}>自刁E�E名前を選んでください</p>
+                    <p style={{ fontSize: "0.72rem", color: C.textMuted, marginBottom: 12 }}>自分の名前を選んでください</p>
                     <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                       {unpaid.map((m) => (
                         <button key={m.id} onClick={() => handlePayLaterBySelection(m.name)} style={{
@@ -847,16 +892,16 @@
                 );
               })()}
 
-              {ev.members.length > 0 && (
+              {mems.length > 0 && (
                 <div style={{ marginTop: 24, borderTop: `1px solid ${C.border}`, paddingTop: 16 }}>
-                  <p style={{ fontSize: "0.72rem", fontWeight: 700, color: C.textMuted, marginBottom: 8, letterSpacing: "0.03em" }}>回答状況　{ev.members.length}吁E/p>
-                  {ev.members.map((m) => (
+                  <p style={{ fontSize: "0.72rem", fontWeight: 700, color: C.textMuted, marginBottom: 8, letterSpacing: "0.03em" }}>回答状況　{mems.length}人</p>
+                  {mems.map((m) => (
                     <div key={m.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "6px 0" }}>
                       <span style={{ fontSize: "0.85rem", color: C.text }}>{m.name}</span>
                       <span style={S.badge(
                         m.rsvp === "yes" ? C.successBg : m.rsvp === "no" ? C.dangerBg : C.warnBg,
                         m.rsvp === "yes" ? C.success : m.rsvp === "no" ? C.danger : C.warn,
-                      )}>{m.rsvp === "yes" ? "参加" : m.rsvp === "no" ? "不参加" : "未宁E}</span>
+                      )}>{m.rsvp === "yes" ? "参加" : m.rsvp === "no" ? "不参加" : "未定"}</span>
                     </div>
                   ))}
                 </div>
@@ -866,6 +911,8 @@
         </>
       );
     }
+
+    /* ── App ── */
     function App() {
       const [page, setPage]     = useState("home");
       const [pageArg, setPageArg] = useState(null);
@@ -874,14 +921,14 @@
       const go = (p, arg) => { setPage(p); setPageArg(arg || null); };
 
       useEffect(() => {
-        const saved = db.get("atsumeru_user");
+        const saved = localUser.get();
         if (saved) setUser(saved);
         const params = new URLSearchParams(window.location.search);
         const eid = params.get("event");
         if (eid) { setPage("participant"); setPageArg(eid); }
       }, []);
 
-      const logout = () => { setUser(null); db.set("atsumeru_user", null); go("home"); };
+      const logout = () => { setUser(null); localUser.set(null); go("home"); };
 
       return (
         <div style={{ fontFamily: C.font, background: C.bg, color: C.text,
@@ -902,4 +949,3 @@
   </script>
 </body>
 </html>
-
