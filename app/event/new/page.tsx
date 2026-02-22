@@ -13,6 +13,11 @@ type EventForm = {
   payUrl: string;
 };
 
+const normalizeAmountInput = (value: string) =>
+  value
+    .replace(/[０-９]/g, (ch) => String.fromCharCode(ch.charCodeAt(0) - 0xfee0))
+    .replace(/[^\d]/g, "");
+
 export default function NewEventPage() {
   const router = useRouter();
   const [form, setForm] = useState<EventForm>({
@@ -26,6 +31,8 @@ export default function NewEventPage() {
   });
   const [status, setStatus] = useState<{ kind: "error" | "info"; message: string } | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const normalizedAmount = form.amount ? Number(form.amount) : 0;
+  const amountPreview = normalizedAmount.toLocaleString("ja-JP");
 
   const submit = async () => {
     setStatus(null);
@@ -111,13 +118,22 @@ export default function NewEventPage() {
             作成と同時に集金を開始する
           </label>
 
-          <input
-            className="input"
-            inputMode="numeric"
-            placeholder="集金金額（任意）"
-            value={form.amount}
-            onChange={(e) => setForm({ ...form, amount: e.target.value })}
-          />
+          <div className="money-field collect-panel">
+            <p className="section-label">集金設定</p>
+            <div className="money-input-wrap">
+              <input
+                className="input"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                placeholder="集金金額"
+                value={form.amount}
+                onChange={(e) => setForm({ ...form, amount: normalizeAmountInput(e.target.value) })}
+              />
+              <span className="money-suffix">円</span>
+            </div>
+            <p className="hint hint-inline">数字のみ入力（例: 3500）</p>
+            <p className="amount-preview">1人あたり {amountPreview}円</p>
+          </div>
           <input
             className="input"
             placeholder="送金URL（任意）"

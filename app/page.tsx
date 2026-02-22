@@ -8,8 +8,8 @@ export default function HomePage() {
           <h1 className="h1">出欠と集金を、これだけで</h1>
           <p className="hint">説明なしで使える最小構成です。まずイベントを作成してください。</p>
           <div style={{ marginTop: 12 }}>
-            <Link href="/event/new">
-              <button className="btn btn-primary">イベントを作成する</button>
+            <Link href="/event/new" className="btn btn-primary">
+              イベントを作成する
             </Link>
           </div>
         </section>

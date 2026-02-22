@@ -34,6 +34,11 @@ const RSVP_LABEL: Record<ResponseRow["rsvp"], string> = {
   no: "不参加",
 };
 
+const normalizeAmountInput = (value: string) =>
+  value
+    .replace(/[０-９]/g, (ch) => String.fromCharCode(ch.charCodeAt(0) - 0xfee0))
+    .replace(/[^\d]/g, "");
+
 export default function ManagePage() {
   const params = useParams<{ eventId: string }>();
   const searchParams = useSearchParams();
@@ -44,6 +49,8 @@ export default function ManagePage() {
   const [form, setForm] = useState({ collecting: false, amount: "", payUrl: "" });
   const [status, setStatus] = useState<UiStatus | null>(null);
   const [savingSetting, setSavingSetting] = useState(false);
+  const normalizedAmount = form.amount ? Number(form.amount) : 0;
+  const amountPreview = normalizedAmount.toLocaleString("ja-JP");
 
   const participantUrl = useMemo(() => {
     if (typeof window === "undefined") return "";
@@ -176,8 +183,8 @@ export default function ManagePage() {
               <h1 className="h1">{event?.title || "イベント管理"}</h1>
               <p className="hint">このページで集金状況を管理します。</p>
             </div>
-            <Link href={`/event/${params.eventId}`}>
-              <button className="btn btn-ghost">参加者ページを見る</button>
+            <Link href={`/event/${params.eventId}`} className="btn btn-ghost">
+              参加者ページを見る
             </Link>
           </div>
           {event && (
@@ -188,7 +195,7 @@ export default function ManagePage() {
           )}
         </section>
 
-        <section className="card">
+        <section className="card settings-card">
           <h2 className="h2">設定</h2>
           <p className="hint">出欠が0件でも、ここで先に集金情報を設定できます。</p>
           <div className="stack" style={{ marginTop: 10 }}>
@@ -200,13 +207,22 @@ export default function ManagePage() {
               />
               集金を開始する
             </label>
-            <input
-              className="input"
-              inputMode="numeric"
-              placeholder="金額（円）"
-              value={form.amount}
-              onChange={(e) => setForm((prev) => ({ ...prev, amount: e.target.value }))}
-            />
+            <div className="money-field collect-panel">
+              <p className="section-label">集金金額</p>
+              <div className="money-input-wrap">
+                <input
+                  className="input"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  placeholder="集金金額"
+                  value={form.amount}
+                  onChange={(e) => setForm((prev) => ({ ...prev, amount: normalizeAmountInput(e.target.value) }))}
+                />
+                <span className="money-suffix">円</span>
+              </div>
+              <p className="hint hint-inline">数字のみ入力（例: 3500）</p>
+              <p className="amount-preview">1人あたり {amountPreview}円</p>
+            </div>
             <input
               className="input"
               placeholder="送金URL（任意）"
