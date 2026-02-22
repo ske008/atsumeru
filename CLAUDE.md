@@ -15,13 +15,13 @@ python3 -m http.server 8080
 
 ブラウザで `http://localhost:8080/` を開く。ビルド不要。
 
-**Supabase設定**: `config.js` に Supabase URL と anon key を記載（.gitignore済み）。
+**Supabase設定**: Next/Vercel の環境変数を使用（`SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`）。`config.js` は使用しない。
 
 **デプロイ**: `main` を含む全ブランチへの push が GitHub Actions で自動的に GitHub Pages へデプロイされる（`.github/workflows/pages.yml`）。
 
 ## アーキテクチャ
 
-**単一ファイル構成**: `index.html` にすべてが含まれる。
+**構成**: Next.js App Router 構成（`app/` 配下）。`index.html` は使用しない。
 
 - **React 18** (CDN/UMD) + **Babel standalone** でブラウザ内JSXトランスパイル
 - **Supabase** でデータ永続化（`events` / `members` テーブル）

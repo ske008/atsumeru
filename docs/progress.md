@@ -18,7 +18,7 @@
 - **フロントエンド**: React (CDN版)
 - **データ保存**: LocalStorage
 - **スタイル**: カスタムCSS（デザイントークンベース）
-- **構成**: シングルHTMLファイル（index.html）
+- **構成**: Next.js App Router（`app/`）構成
 
 ## 現在の実装状況
 
@@ -63,7 +63,7 @@ c:\business\atsumeru\
 ├── .git/                      # Gitリポジトリ
 ├── .gitignore                 # Git除外設定
 ├── CLAUDE.md                  # プロジェクトドキュメント
-├── index.html                 # メインアプリケーション（908行）
+├── app/                       # Next.js App Router
 └── docs/
     └── progress.md            # このファイル
 ```
