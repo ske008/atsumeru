@@ -31,12 +31,12 @@ export default function NewEventPage() {
     setStatus(null);
 
     if (!form.title.trim()) {
-      setStatus({ kind: "error", message: "ƒCƒxƒ“ƒg–¼‚ğ“ü—Í‚µ‚Ä‚­‚¾‚³‚¢B" });
+      setStatus({ kind: "error", message: "ã‚¤ãƒ™ãƒ³ãƒˆåã‚’å…¥åŠ›ã—ã¦ãã ã•ã„ã€‚" });
       return;
     }
 
     if (form.amount && Number.isNaN(Number(form.amount))) {
-      setStatus({ kind: "error", message: "‹àŠz‚Í”š‚Å“ü—Í‚µ‚Ä‚­‚¾‚³‚¢B" });
+      setStatus({ kind: "error", message: "é‡‘é¡ã¯æ•°å­—ã§å…¥åŠ›ã—ã¦ãã ã•ã„ã€‚" });
       return;
     }
 
@@ -58,13 +58,13 @@ export default function NewEventPage() {
 
       const data = await res.json();
       if (!res.ok) {
-        setStatus({ kind: "error", message: data.error || "ì¬‚Å‚«‚Ü‚¹‚ñ‚Å‚µ‚½B“ü—Í“à—e‚ğŠm”F‚µ‚Ä‚­‚¾‚³‚¢B" });
+        setStatus({ kind: "error", message: data.error || "ä½œæˆã§ãã¾ã›ã‚“ã§ã—ãŸã€‚å…¥åŠ›å†…å®¹ã‚’ç¢ºèªã—ã¦ãã ã•ã„ã€‚" });
         return;
       }
 
       router.push(`/event/${data.eventId}/manage?token=${data.ownerToken}`);
     } catch {
-      setStatus({ kind: "error", message: "’ÊMƒGƒ‰[‚ª”­¶‚µ‚Ü‚µ‚½BŠÔ‚ğ‚¨‚¢‚ÄÄs‚µ‚Ä‚­‚¾‚³‚¢B" });
+      setStatus({ kind: "error", message: "é€šä¿¡ã‚¨ãƒ©ãƒ¼ãŒç™ºç”Ÿã—ã¾ã—ãŸã€‚æ™‚é–“ã‚’ãŠã„ã¦å†è©¦è¡Œã—ã¦ãã ã•ã„ã€‚" });
     } finally {
       setSubmitting(false);
     }
@@ -73,13 +73,13 @@ export default function NewEventPage() {
   return (
     <main className="container">
       <div className="card">
-        <h1 className="h1">ƒCƒxƒ“ƒgì¬</h1>
-        <p className="hint">ì¬Œã‚·‚®ŠÇ—‰æ–Ê‚ÉˆÚ“®‚µ‚Ü‚·BoŒ‡‚ª0l‚Å‚àæ‚ÉW‹àİ’è‚Å‚«‚Ü‚·B</p>
+        <h1 className="h1">ã‚¤ãƒ™ãƒ³ãƒˆä½œæˆ</h1>
+        <p className="hint">ä½œæˆå¾Œã™ãç®¡ç†ç”»é¢ã«ç§»å‹•ã—ã¾ã™ã€‚å‡ºæ¬ ãŒ0äººã§ã‚‚å…ˆã«é›†é‡‘è¨­å®šã§ãã¾ã™ã€‚</p>
 
         <div className="stack" style={{ marginTop: 12 }}>
           <input
             className="input"
-            placeholder="ƒCƒxƒ“ƒg–¼i—á: 3Œ‚Ìˆù‚İ‰ïj"
+            placeholder="ã‚¤ãƒ™ãƒ³ãƒˆåï¼ˆä¾‹: 3æœˆã®é£²ã¿ä¼šï¼‰"
             value={form.title}
             onChange={(e) => setForm({ ...form, title: e.target.value })}
           />
@@ -91,13 +91,13 @@ export default function NewEventPage() {
           />
           <input
             className="input"
-            placeholder="êŠi”CˆÓj"
+            placeholder="å ´æ‰€ï¼ˆä»»æ„ï¼‰"
             value={form.place}
             onChange={(e) => setForm({ ...form, place: e.target.value })}
           />
           <input
             className="input"
-            placeholder="ƒƒ‚i”CˆÓj"
+            placeholder="ãƒ¡ãƒ¢ï¼ˆä»»æ„ï¼‰"
             value={form.note}
             onChange={(e) => setForm({ ...form, note: e.target.value })}
           />
@@ -108,19 +108,19 @@ export default function NewEventPage() {
               checked={form.collecting}
               onChange={(e) => setForm({ ...form, collecting: e.target.checked })}
             />
-            ì¬‚Æ“¯‚ÉW‹à‚ğŠJn‚·‚é
+            ä½œæˆã¨åŒæ™‚ã«é›†é‡‘ã‚’é–‹å§‹ã™ã‚‹
           </label>
 
           <input
             className="input"
             inputMode="numeric"
-            placeholder="W‹à‹àŠzi”CˆÓj"
+            placeholder="é›†é‡‘é‡‘é¡ï¼ˆä»»æ„ï¼‰"
             value={form.amount}
             onChange={(e) => setForm({ ...form, amount: e.target.value })}
           />
           <input
             className="input"
-            placeholder="‘—‹àURLi”CˆÓj"
+            placeholder="é€é‡‘URLï¼ˆä»»æ„ï¼‰"
             value={form.payUrl}
             onChange={(e) => setForm({ ...form, payUrl: e.target.value })}
           />
@@ -130,7 +130,7 @@ export default function NewEventPage() {
           )}
 
           <button className="btn btn-primary" onClick={submit} disabled={submitting}>
-            {submitting ? "ì¬’†..." : "ì¬‚µ‚ÄŠÇ—‰æ–Ê‚Ö"}
+            {submitting ? "ä½œæˆä¸­..." : "ä½œæˆã—ã¦ç®¡ç†ç”»é¢ã¸"}
           </button>
         </div>
       </div>

@@ -4,14 +4,14 @@ import { supabaseAdmin } from "@/lib/supabase";
 export async function PATCH(req: NextRequest, { params }: { params: { id: string; responseId: string } }) {
   const token = req.nextUrl.searchParams.get("edit");
   if (!token) {
-    return NextResponse.json({ error: "•ÒWƒg[ƒNƒ“‚ª•K—v‚Å‚·B" }, { status: 401 });
+    return NextResponse.json({ error: "ç·¨é›†ãƒˆãƒ¼ã‚¯ãƒ³ãŒå¿…è¦ã§ã™ã€‚" }, { status: 401 });
   }
 
   let body: Record<string, unknown>;
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: "•s³‚ÈƒŠƒNƒGƒXƒg‚Å‚·B" }, { status: 400 });
+    return NextResponse.json({ error: "ä¸æ­£ãªãƒªã‚¯ã‚¨ã‚¹ãƒˆã§ã™ã€‚" }, { status: 400 });
   }
 
   const { data: responseRow, error: responseError } = await supabaseAdmin
@@ -22,11 +22,11 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     .single();
 
   if (responseError || !responseRow) {
-    return NextResponse.json({ error: "‰ñ“šƒf[ƒ^‚ªŒ©‚Â‚©‚è‚Ü‚¹‚ñB" }, { status: 404 });
+    return NextResponse.json({ error: "å›ç­”ãƒ‡ãƒ¼ã‚¿ãŒè¦‹ã¤ã‹ã‚Šã¾ã›ã‚“ã€‚" }, { status: 404 });
   }
 
   if (responseRow.edit_token !== token) {
-    return NextResponse.json({ error: "–{lŠm”F‚É¸”s‚µ‚Ü‚µ‚½B" }, { status: 403 });
+    return NextResponse.json({ error: "æœ¬äººç¢ºèªã«å¤±æ•—ã—ã¾ã—ãŸã€‚" }, { status: 403 });
   }
 
   const updatePayload: Record<string, unknown> = {
@@ -51,7 +51,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     .single();
 
   if (error) {
-    return NextResponse.json({ error: "‰ñ“š‚ğXV‚Å‚«‚Ü‚¹‚ñ‚Å‚µ‚½B" }, { status: 500 });
+    return NextResponse.json({ error: "å›ç­”ã‚’æ›´æ–°ã§ãã¾ã›ã‚“ã§ã—ãŸã€‚" }, { status: 500 });
   }
 
   return NextResponse.json(data);
