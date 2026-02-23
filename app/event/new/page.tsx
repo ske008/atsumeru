@@ -104,6 +104,7 @@ export default function NewEventPage() {
                 value={form.title}
                 onChange={(e) => setForm({ ...form, title: e.target.value })}
               />
+              <label className="hint" style={{ marginBottom: -8, fontSize: "0.8125rem" }}>日時</label>
               <input
                 className="input"
                 type="datetime-local"

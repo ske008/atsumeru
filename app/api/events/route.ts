@@ -42,7 +42,8 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ eventId: data.id, ownerToken });
-  } catch {
+  } catch (e) {
+    console.error("[POST /api/events]", e);
     return NextResponse.json({ error: "リクエスト形式が正しくありません。" }, { status: 400 });
   }
 }
