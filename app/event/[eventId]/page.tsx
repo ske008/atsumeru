@@ -253,9 +253,22 @@ export default function ParticipantPage() {
           </div>
           {event.note && <p className="hint">{event.note}</p>}
           {event.collecting && event.amount > 0 && (
-            <div style={{ marginTop: 12 }}>
-              <span className="badge badge-accent">&yen;{event.amount.toLocaleString()} / 人</span>
-            </div>
+            <p style={{ marginTop: 12, fontSize: "1.1rem", fontWeight: 600 }}>
+              支払い金額：&yen;{event.amount.toLocaleString()}
+            </p>
+          )}
+          {event.collecting && event.pay_url && (
+            <p style={{ marginTop: 8, fontSize: 14, color: "var(--muted)" }}>
+              支払い先：
+              <a
+                href={ensureAbsoluteUrl(event.pay_url)}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: "#3366cc" }}
+              >
+                {event.pay_url}
+              </a>
+            </p>
           )}
         </div>
 
@@ -327,6 +340,19 @@ export default function ParticipantPage() {
                 onChange={(e) => setName(e.target.value)}
               />
               {notice && <p className="status status-info">{notice}</p>}
+              {notice && event.collecting && event.pay_url && (
+                <p style={{ fontSize: 14, color: "var(--muted)" }}>
+                  支払い先：
+                  <a
+                    href={ensureAbsoluteUrl(event.pay_url)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ color: "#3366cc" }}
+                  >
+                    {event.pay_url}
+                  </a>
+                </p>
+              )}
               {error && <p className="status status-error">{error}</p>}
               <div className="grid3">
                 <button className="btn btn-primary" onClick={() => submitRsvp("yes")} disabled={submitting}>
@@ -432,7 +458,7 @@ export default function ParticipantPage() {
                                   <button
                                     className="btn btn-primary"
                                     style={{ flex: 1, fontSize: "0.8125rem" }}
-                                    onClick={() => { togglePaid(row); setPayingRow(null); }}
+                                    onClick={() => { if (event.pay_url) window.open(ensureAbsoluteUrl(event.pay_url), "_blank", "noopener,noreferrer"); togglePaid(row); setPayingRow(null); }}
                                   >
                                     キャッシュレスで支払う
                                   </button>
