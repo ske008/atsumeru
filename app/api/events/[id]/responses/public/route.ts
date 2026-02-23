@@ -1,6 +1,8 @@
 ﻿import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(_: Request, { params }: { params: { id: string } }) {
   const { data: event, error: eventError } = await supabaseAdmin
     .from("events")

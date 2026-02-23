@@ -28,12 +28,6 @@ function ensureAbsoluteUrl(url: string): string {
   return `https://${trimmed}`;
 }
 
-const RSVP_LABEL: Record<ResponseRow["rsvp"], string> = {
-  yes: "参加",
-  maybe: "未定",
-  no: "不参加",
-};
-
 function formatDate(value: string | null) {
   if (!value) return null;
   try {
@@ -181,22 +175,6 @@ export default function ParticipantPage() {
     setJustSubmitted(null);
   };
 
-  const togglePaid = async (row: ResponseRow) => {
-    try {
-      const res = await fetch(
-        `/api/events/${params.eventId}/responses/${row.id}?edit=${row.edit_token}`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ paid: !row.paid }),
-        }
-      );
-      if (!res.ok) return;
-      setResponses((prev) =>
-        prev.map((r) => (r.id === row.id ? { ...r, paid: !row.paid } : r))
-      );
-    } catch {}
-  };
 
   if (loading) {
     return <main className="container"><div className="card hero"><p className="hint">読み込み中...</p></div></main>;
@@ -233,26 +211,29 @@ export default function ParticipantPage() {
             {event.amount > 0 && (
               <p className="hint" style={{ marginTop: 4 }}>&yen;{event.amount.toLocaleString()}</p>
             )}
+            <div style={{ marginTop: 12 }}>
+              <button className="btn btn-primary btn-full" onClick={markPaid}>
+                支払う
+              </button>
+            </div>
+            <div style={{ marginTop: 12 }}>
+              <button className="btn btn-ghost btn-full" onClick={skipPay}>
+                あとで払う
+              </button>
+            </div>
             {event.pay_url && (
-              <div style={{ marginTop: 12 }}>
+              <p style={{ marginTop: 10, textAlign: "center", fontSize: 14, color: "var(--muted)" }}>
+                支払い方法：
                 <a
                   href={ensureAbsoluteUrl(event.pay_url)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="btn btn-accent btn-full"
+                  style={{ color: "#3366cc" }}
                 >
-                  送金ページを開く
+                  {event.pay_url}
                 </a>
-              </div>
+              </p>
             )}
-            <div className="grid3" style={{ marginTop: 12, gridTemplateColumns: "1fr 1fr" }}>
-              <button className="btn btn-primary" onClick={markPaid}>
-                支払い済み
-              </button>
-              <button className="btn btn-ghost" onClick={skipPay}>
-                あとで払う
-              </button>
-            </div>
             {error && <p className="status status-error" style={{ marginTop: 8 }}>{error}</p>}
           </div>
         )}
@@ -297,29 +278,73 @@ export default function ParticipantPage() {
               </div>
             </div>
           </div>
-          <div className="list" style={{ border: "none", borderTop: "1px solid var(--border)" }}>
-            {responses.length === 0 && (
-              <div className="item">
-                <span className="hint" style={{ marginTop: 0 }}>まだ回答がありません。</span>
-              </div>
-            )}
-            {responses.map((row) => (
-              <div key={row.id} className="item">
+
+          {responses.length === 0 ? (
+            <div style={{ padding: "8px 14px 14px" }}>
+              <span className="hint" style={{ marginTop: 0 }}>まだ回答がありません。</span>
+            </div>
+          ) : (
+            <div style={{ borderTop: "1px solid var(--border)" }}>
+              {/* 参加 */}
+              {yesRows.length > 0 && (
                 <div>
-                  <div style={{ fontWeight: 600, fontSize: "0.9375rem" }}>{row.name}</div>
-                  <div className="hint" style={{ marginTop: 0 }}>{RSVP_LABEL[row.rsvp]}</div>
+                  <div style={{ padding: "8px 14px 4px", fontSize: "0.8125rem", fontWeight: 600, color: "var(--success, #16a34a)" }}>
+                    参加 ({yesRows.length})
+                  </div>
+                  <div className="list" style={{ border: "none" }}>
+                    {yesRows.map((row) => (
+                      <div key={row.id} className="item">
+                        <span style={{ fontWeight: 500, fontSize: "0.9375rem" }}>{row.name}</span>
+                        {event.collecting && (
+                          <span style={{
+                            fontSize: "0.75rem",
+                            padding: "2px 8px",
+                            borderRadius: 4,
+                            background: row.paid ? "var(--success, #16a34a)" : "var(--border)",
+                            color: row.paid ? "#fff" : "var(--muted)",
+                          }}>
+                            {row.paid ? "支払い済み" : "未払い"}
+                          </span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                {event.collecting && row.rsvp === "yes" && (
-                  <button
-                    className={`btn btn-sm ${row.paid ? "btn-primary" : "btn-ghost"}`}
-                    onClick={() => togglePaid(row)}
-                  >
-                    {row.paid ? "支払い済み" : "未払い"}
-                  </button>
-                )}
-              </div>
-            ))}
-          </div>
+              )}
+
+              {/* 未定 */}
+              {maybeRows.length > 0 && (
+                <div>
+                  <div style={{ padding: "8px 14px 4px", fontSize: "0.8125rem", fontWeight: 600, color: "var(--warn, #d97706)" }}>
+                    未定 ({maybeRows.length})
+                  </div>
+                  <div className="list" style={{ border: "none" }}>
+                    {maybeRows.map((row) => (
+                      <div key={row.id} className="item">
+                        <span style={{ fontWeight: 500, fontSize: "0.9375rem" }}>{row.name}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* 不参加 */}
+              {noRows.length > 0 && (
+                <div>
+                  <div style={{ padding: "8px 14px 4px", fontSize: "0.8125rem", fontWeight: 600, color: "var(--muted)" }}>
+                    不参加 ({noRows.length})
+                  </div>
+                  <div className="list" style={{ border: "none" }}>
+                    {noRows.map((row) => (
+                      <div key={row.id} className="item">
+                        <span style={{ fontWeight: 500, fontSize: "0.9375rem", color: "var(--muted)" }}>{row.name}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </main>
