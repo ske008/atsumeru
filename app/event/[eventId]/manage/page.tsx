@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
@@ -35,9 +35,16 @@ const RSVP_LABEL: Record<ResponseRow["rsvp"], string> = {
 };
 
 const normalizeAmountInput = (value: string) =>
-  value
-    .replace(/[０-９]/g, (ch) => String.fromCharCode(ch.charCodeAt(0) - 0xfee0))
-    .replace(/[^\d]/g, "");
+  Array.from(value)
+    .map((ch) => {
+      const code = ch.charCodeAt(0);
+      if (code >= 0xff10 && code <= 0xff19) {
+        return String.fromCharCode(code - 0xfee0);
+      }
+      return ch;
+    })
+    .join("")
+    .replace(/\D/g, "");
 
 export default function ManagePage() {
   const params = useParams<{ eventId: string }>();
@@ -49,8 +56,11 @@ export default function ManagePage() {
   const [form, setForm] = useState({ collecting: false, amount: "", payUrl: "" });
   const [status, setStatus] = useState<UiStatus | null>(null);
   const [savingSetting, setSavingSetting] = useState(false);
+
   const normalizedAmount = form.amount ? Number(form.amount) : 0;
   const amountPreview = normalizedAmount.toLocaleString("ja-JP");
+  const yesResponses = responses.filter((row) => row.rsvp === "yes");
+  const paidResponses = yesResponses.filter((row) => row.paid);
 
   const participantUrl = useMemo(() => {
     if (typeof window === "undefined") return "";
@@ -64,7 +74,7 @@ export default function ManagePage() {
       const eventRes = await fetch(`/api/events/${params.eventId}`);
       const eventData = await eventRes.json();
       if (!eventRes.ok) {
-        setStatus({ kind: "error", message: eventData.error || "イベント情報を取得できません。" });
+        setStatus({ kind: "error", message: eventData.error || "イベント情報の取得に失敗しました。" });
         return;
       }
 
@@ -76,14 +86,14 @@ export default function ManagePage() {
       });
 
       if (!token) {
-        setStatus({ kind: "error", message: "管理URLが不完全です。token付きURLを開いてください。" });
+        setStatus({ kind: "error", message: "管理URLに token がありません。作成直後のURLを開いてください。" });
         return;
       }
 
       const responseRes = await fetch(`/api/events/${params.eventId}/responses?token=${token}`);
       const responseData = await responseRes.json();
       if (!responseRes.ok) {
-        setStatus({ kind: "error", message: responseData.error || "回答一覧を取得できません。" });
+        setStatus({ kind: "error", message: responseData.error || "回答一覧の取得に失敗しました。" });
         return;
       }
 
@@ -110,7 +120,7 @@ export default function ManagePage() {
 
   const saveCollecting = async () => {
     if (!token) {
-      setStatus({ kind: "error", message: "管理URLが不完全です。token付きURLを開いてください。" });
+      setStatus({ kind: "error", message: "管理URLに token がありません。作成直後のURLを開いてください。" });
       return;
     }
 
@@ -135,7 +145,7 @@ export default function ManagePage() {
 
       const data = await res.json();
       if (!res.ok) {
-        setStatus({ kind: "error", message: data.error || "集金設定を更新できませんでした。" });
+        setStatus({ kind: "error", message: data.error || "集金設定の更新に失敗しました。" });
         return;
       }
 
@@ -150,7 +160,7 @@ export default function ManagePage() {
 
   const togglePaid = async (row: ResponseRow) => {
     if (!token) {
-      setStatus({ kind: "error", message: "管理URLが不完全です。token付きURLを開いてください。" });
+      setStatus({ kind: "error", message: "管理URLに token がありません。作成直後のURLを開いてください。" });
       return;
     }
 
@@ -163,12 +173,12 @@ export default function ManagePage() {
       const data = await res.json();
 
       if (!res.ok) {
-        setStatus({ kind: "error", message: data.error || "支払い状態を更新できませんでした。" });
+        setStatus({ kind: "error", message: data.error || "支払い状態の更新に失敗しました。" });
         return;
       }
 
       setResponses((prev) => prev.map((item) => (item.id === row.id ? { ...item, paid: data.paid, paid_at: data.paid_at } : item)));
-      setStatus({ kind: "success", message: data.paid ? "支払い済みにしました。" : "未払いに戻しました。" });
+      setStatus({ kind: "success", message: data.paid ? "支払い済みに更新しました。" : "未払いに戻しました。" });
     } catch {
       setStatus({ kind: "error", message: "通信エラーが発生しました。時間をおいて再試行してください。" });
     }
@@ -181,7 +191,7 @@ export default function ManagePage() {
           <div className="row-between">
             <div>
               <h1 className="h1">{event?.title || "イベント管理"}</h1>
-              <p className="hint">このページで集金状況を管理します。</p>
+              <p className="hint">このページで出欠と集金状況を管理します。</p>
             </div>
             <Link href={`/event/${params.eventId}`} className="btn btn-ghost">
               参加者ページを見る
@@ -189,7 +199,7 @@ export default function ManagePage() {
           </div>
           {event && (
             <p className="hint" style={{ marginTop: 8 }}>
-              {event.date || "日時未定"}
+              {event.date || "日時未設定"}
               {event.place ? ` / ${event.place}` : ""}
             </p>
           )}
@@ -237,7 +247,7 @@ export default function ManagePage() {
 
         <section className="card">
           <h2 className="h2">共有</h2>
-          <p className="hint">参加者にこのURLを送ってください。</p>
+          <p className="hint">参加者にこのURLを共有してください。</p>
           <div className="row" style={{ marginTop: 10 }}>
             <input className="input" value={participantUrl} readOnly />
             <button className="btn btn-primary" onClick={copyParticipantUrl}>参加者URLをコピー</button>
@@ -248,10 +258,9 @@ export default function ManagePage() {
           <h2 className="h2">回答一覧</h2>
           {responses.length === 0 && (
             <p className="status status-info" style={{ marginTop: 10 }}>
-              まだ回答はありません。先に設定だけ完了して、参加者URLを共有してください。
+              まだ回答がありません。
             </p>
           )}
-
           {responses.length > 0 && (
             <div className="list" style={{ marginTop: 10 }}>
               {responses.map((row) => (
@@ -267,17 +276,51 @@ export default function ManagePage() {
                       <button className="btn btn-ghost" onClick={() => togglePaid(row)}>支払い済みにする</button>
                     )
                   ) : (
-                    <span className="badge">集金未開始</span>
+                    <span className="badge">集金OFF</span>
                   )}
                 </div>
               ))}
             </div>
           )}
+        </section>
 
-          {!form.collecting && responses.length > 0 && (
+        <section className="card">
+          <h2 className="h2">集金確認</h2>
+          {!form.collecting && (
             <p className="status status-warn" style={{ marginTop: 10 }}>
-              集金を開始すると済/未を切り替えできます。
+              集金を開始すると、この欄で支払い状況を確認できます。
             </p>
+          )}
+          {form.collecting && (
+            <>
+              <p className="hint" style={{ marginTop: 10 }}>
+                支払い済み: {paidResponses.length} / {yesResponses.length}
+              </p>
+              {yesResponses.length === 0 && (
+                <p className="status status-info" style={{ marginTop: 10 }}>
+                  参加(はい)の回答がまだありません。
+                </p>
+              )}
+              {yesResponses.length > 0 && (
+                <div className="list" style={{ marginTop: 10 }}>
+                  {yesResponses.map((row) => (
+                    <div key={row.id} className="item row-between">
+                      <div>
+                        <div>{row.name}</div>
+                        <div className="hint" style={{ marginTop: 4 }}>
+                          {row.paid ? "支払い済み" : "未払い"}
+                        </div>
+                      </div>
+                      {row.paid ? (
+                        <button className="btn btn-primary" onClick={() => togglePaid(row)}>未払いに戻す</button>
+                      ) : (
+                        <button className="btn btn-ghost" onClick={() => togglePaid(row)}>支払い済みにする</button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </section>
 
@@ -286,3 +329,4 @@ export default function ManagePage() {
     </main>
   );
 }
+
