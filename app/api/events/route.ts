@@ -1,5 +1,6 @@
-﻿import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
+import { mergeOwnerTokens, readOwnerTokensFromRequest, writeOwnerTokensCookie } from "@/lib/ownerTokens";
 
 export const dynamic = "force-dynamic";
 
@@ -41,7 +42,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "イベント作成に失敗しました。" }, { status: 500 });
     }
 
-    return NextResponse.json({ eventId: data.id, ownerToken });
+    const response = NextResponse.json({ eventId: data.id, ownerToken });
+    const existingTokens = readOwnerTokensFromRequest(req);
+    const mergedTokens = mergeOwnerTokens(existingTokens, ownerToken);
+    writeOwnerTokensCookie(response, mergedTokens);
+    return response;
   } catch (e) {
     console.error("[POST /api/events]", e);
     return NextResponse.json({ error: "リクエスト形式が正しくありません。" }, { status: 400 });

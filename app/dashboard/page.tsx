@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { supabaseAdmin } from "@/lib/supabase";
+import { cookies } from "next/headers";
+import { OWNER_TOKENS_COOKIE, parseOwnerTokens } from "@/lib/ownerTokens";
 
 type EventRow = {
   id: string;
@@ -52,17 +54,36 @@ export default async function DashboardPage() {
     );
   }
 
-  const [{ data: events, error: eventsError }, { data: responses, error: responsesError }] =
-    await Promise.all([
-      supabaseAdmin
-        .from("events")
-        .select("id,title,date,place,collecting,amount,owner_token,created_at")
-        .order("created_at", { ascending: false }),
-      supabaseAdmin
+  const cookieStore = cookies();
+  const ownerTokens = parseOwnerTokens(cookieStore.get(OWNER_TOKENS_COOKIE)?.value);
+
+  let eventsError: unknown = null;
+  let responsesError: unknown = null;
+  let events: EventRow[] = [];
+  let responses: ResponseRow[] = [];
+
+  if (ownerTokens.length > 0) {
+    const { data, error } = await supabaseAdmin
+      .from("events")
+      .select("id,title,date,place,collecting,amount,owner_token,created_at")
+      .in("owner_token", ownerTokens)
+      .order("created_at", { ascending: false });
+
+    eventsError = error;
+    events = (data || []) as EventRow[];
+
+    const eventIds = events.map((event) => event.id);
+    if (!error && eventIds.length > 0) {
+      const { data: responseData, error: responseError } = await supabaseAdmin
         .from("responses")
         .select("id,event_id,name,rsvp,paid")
-        .order("created_at", { ascending: true }),
-    ]);
+        .in("event_id", eventIds)
+        .order("created_at", { ascending: true });
+
+      responsesError = responseError;
+      responses = (responseData || []) as ResponseRow[];
+    }
+  }
 
   if (eventsError || responsesError) {
     return (
@@ -77,8 +98,8 @@ export default async function DashboardPage() {
     );
   }
 
-  const eventList = (events || []) as EventRow[];
-  const responseList = (responses || []) as ResponseRow[];
+  const eventList = events;
+  const responseList = responses;
 
   const totalYes = responseList.filter((r) => r.rsvp === "yes").length;
   const totalPaid = responseList.filter((r) => r.rsvp === "yes" && r.paid).length;

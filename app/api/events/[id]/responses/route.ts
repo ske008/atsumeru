@@ -1,5 +1,6 @@
-﻿import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
+import { mergeOwnerTokens, readOwnerTokensFromRequest, writeOwnerTokensCookie } from "@/lib/ownerTokens";
 
 export const dynamic = "force-dynamic";
 
@@ -37,7 +38,11 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     return NextResponse.json({ error: "回答一覧の取得に失敗しました。" }, { status: 500 });
   }
 
-  return NextResponse.json({ responses: data || [] });
+  const response = NextResponse.json({ responses: data || [] });
+  const existingTokens = readOwnerTokensFromRequest(req);
+  const mergedTokens = mergeOwnerTokens(existingTokens, token);
+  writeOwnerTokensCookie(response, mergedTokens);
+  return response;
 }
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
