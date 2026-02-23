@@ -223,11 +223,15 @@ export default function ManagePage() {
 
         {/* Share URL */}
         <div className="card">
-          <p className="section-label">参加者URL</p>
+          <p className="h2">このイベントのURL</p>
           <div className="row" style={{ marginTop: 8 }}>
             <input className="input" value={participantUrl} readOnly style={{ flex: 1 }} />
             <button className="btn btn-primary btn-sm" onClick={copyParticipantUrl}>コピー</button>
           </div>
+          <p className="hint" style={{ marginTop: 8, fontSize: "0.8125rem" }}>
+            ※イベント編集は、イベント作成した端末、ブラウザでのみ可能です。
+          </p>
+
         </div>
 
         {/* Collection Settings */}

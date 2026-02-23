@@ -64,6 +64,11 @@ export default function ParticipantPage() {
   // 参加登録直後 → 支払い選択を表示するため
   const [justSubmitted, setJustSubmitted] = useState<JustSubmitted | null>(null);
 
+  // 一覧から支払う際の状態管理
+  const [payingRow, setPayingRow] = useState<{ id: string } | null>(null);
+  // 回答編集
+  const [editingRow, setEditingRow] = useState<{ id: string; name: string; rsvp: string } | null>(null);
+
   const yesRows = useMemo(() => responses.filter((r) => r.rsvp === "yes"), [responses]);
   const maybeRows = useMemo(() => responses.filter((r) => r.rsvp === "maybe"), [responses]);
   const noRows = useMemo(() => responses.filter((r) => r.rsvp === "no"), [responses]);
@@ -168,6 +173,16 @@ export default function ParticipantPage() {
     setJustSubmitted(null);
   };
 
+  // 一覧から未払いバッジをタップ
+  const handleUnpaidClick = (row: ResponseRow) => {
+    if (event?.pay_url) {
+      setPayingRow({ id: row.id });
+    } else {
+      togglePaid(row);
+    }
+  };
+
+
   const skipPay = () => {
     if (justSubmitted) {
       setNotice(`${justSubmitted.name} の参加を登録しました。`);
@@ -175,6 +190,29 @@ export default function ParticipantPage() {
     setJustSubmitted(null);
   };
 
+
+  const saveEdit = async (row: ResponseRow, override?: { name?: string; rsvp?: string }) => {
+    const current = editingRow;
+    if (!current && !override) return;
+    const payload = {
+      name: override?.name ?? current?.name ?? row.name,
+      rsvp: override?.rsvp ?? current?.rsvp ?? row.rsvp,
+    };
+    try {
+      const res = await fetch(
+        `/api/events/${params.eventId}/responses/${row.id}?edit=${row.edit_token}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }
+      );
+      if (res.ok) {
+        await fetchResponses();
+        setEditingRow(null);
+      }
+    } catch {}
+  };
 
   const togglePaid = async (row: ResponseRow) => {
     try {
@@ -219,41 +257,18 @@ export default function ParticipantPage() {
               <span className="badge badge-accent">&yen;{event.amount.toLocaleString()} / 人</span>
             </div>
           )}
-          {event.collecting && event.pay_url && (
-            <p style={{ marginTop: 8, fontSize: 14, color: "var(--muted)" }}>
-              支払い方法：
-              <a
-                href={ensureAbsoluteUrl(event.pay_url)}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ color: "#3366cc" }}
-              >
-                {event.pay_url}
-              </a>
-            </p>
-          )}
         </div>
 
         {/* 支払い選択（参加登録直後に表示） */}
         {justSubmitted && (
           <div className="card">
-            <h2 className="h2">{justSubmitted.name} さん、支払いはどうしますか？</h2>
+            <h2 className="h2">{justSubmitted.name} さん、お支払いにお進みください</h2>
             {event.amount > 0 && (
               <p className="hint" style={{ marginTop: 4 }}>&yen;{event.amount.toLocaleString()}</p>
             )}
-            <div style={{ marginTop: 12 }}>
-              <button className="btn btn-primary btn-full" onClick={markPaid}>
-                支払う
-              </button>
-            </div>
-            <div style={{ marginTop: 12 }}>
-              <button className="btn btn-ghost btn-full" onClick={skipPay}>
-                あとで払う
-              </button>
-            </div>
             {event.pay_url && (
-              <p style={{ marginTop: 10, textAlign: "center", fontSize: 14, color: "var(--muted)" }}>
-                支払い方法：
+              <p style={{ marginTop: 8, fontSize: 14, color: "var(--muted)" }}>
+                支払い先：
                 <a
                   href={ensureAbsoluteUrl(event.pay_url)}
                   target="_blank"
@@ -263,6 +278,38 @@ export default function ParticipantPage() {
                   {event.pay_url}
                 </a>
               </p>
+            )}
+            {event.pay_url && (
+              <p style={{ marginTop: 4, fontSize: 13, color: "var(--muted)" }}>
+                支払いが完了したら、支払い完了を押してください
+              </p>
+            )}
+            {event.pay_url ? (
+              <>
+                <div style={{ marginTop: 12 }}>
+                  <button className="btn btn-primary btn-full" onClick={markPaid}>
+                    支払い完了
+                  </button>
+                </div>
+                <div style={{ marginTop: 12 }}>
+                  <button className="btn btn-ghost btn-full" onClick={skipPay}>
+                    後で支払う
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div style={{ marginTop: 12 }}>
+                  <button className="btn btn-primary btn-full" onClick={markPaid}>
+                    支払う
+                  </button>
+                </div>
+                <div style={{ marginTop: 12 }}>
+                  <button className="btn btn-ghost btn-full" onClick={skipPay}>
+                    後で支払う
+                  </button>
+                </div>
+              </>
             )}
             {error && <p className="status status-error" style={{ marginTop: 8 }}>{error}</p>}
           </div>
@@ -307,6 +354,11 @@ export default function ParticipantPage() {
                 {noRows.length > 0 && <span className="badge">{noRows.length} 不参加</span>}
               </div>
             </div>
+            {event.collecting && (
+              <p style={{ marginTop: 4, fontSize: 13, color: "var(--muted)" }}>
+                未払いの方は「未払い」をクリックして支払い方法を選択してください
+              </p>
+            )}
           </div>
 
           {responses.length === 0 ? (
@@ -323,23 +375,78 @@ export default function ParticipantPage() {
                   </div>
                   <div className="list" style={{ border: "none" }}>
                     {yesRows.map((row) => (
-                      <div key={row.id} className="item">
-                        <span style={{ fontWeight: 500, fontSize: "0.9375rem" }}>{row.name}</span>
-                        {event.collecting && (
-                          <button
-                            onClick={() => togglePaid(row)}
-                            style={{
-                              fontSize: "0.75rem",
-                              padding: "2px 8px",
-                              borderRadius: 4,
-                              border: "none",
-                              cursor: "pointer",
-                              background: row.paid ? "var(--success, #16a34a)" : "var(--border)",
-                              color: row.paid ? "#fff" : "var(--muted)",
-                            }}
-                          >
-                            {row.paid ? "支払い済み" : "未払い"}
-                          </button>
+                      <div key={row.id}>
+                        {editingRow?.id === row.id ? (
+                          <div style={{ padding: "8px 14px 12px" }}>
+                            <input
+                              className="input"
+                              value={editingRow.name}
+                              onChange={(e) => setEditingRow({ ...editingRow, name: e.target.value })}
+                              onBlur={() => editingRow.name.trim() && saveEdit(row, { name: editingRow.name })}
+                              onKeyDown={(e) => { if (e.key === "Enter") { e.currentTarget.blur(); } }}
+                              style={{ marginBottom: 8 }}
+                              autoFocus
+                            />
+                            <div className="grid3">
+                              {(["yes", "maybe", "no"] as const).map((v) => (
+                                <button
+                                  key={v}
+                                  className={`btn ${editingRow.rsvp === v ? "btn-primary" : "btn-ghost"}`}
+                                  style={{ fontSize: "0.8125rem" }}
+                                  onClick={() => saveEdit(row, { rsvp: v })}
+                                >
+                                  {v === "yes" ? "参加" : v === "maybe" ? "未定" : "不参加"}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            <div className="item">
+                              <span
+                                style={{ fontWeight: 500, fontSize: "0.9375rem", cursor: "pointer", textDecoration: "underline", textDecorationColor: "var(--border)", textUnderlineOffset: 3 }}
+                                onClick={() => setEditingRow({ id: row.id, name: row.name, rsvp: row.rsvp })}
+                              >
+                                {row.name}
+                              </span>
+                              {event.collecting && (
+                                <button
+                                  onClick={() => row.paid ? togglePaid(row) : handleUnpaidClick(row)}
+                                  style={{
+                                    fontSize: "0.75rem",
+                                    padding: "2px 8px",
+                                    borderRadius: 4,
+                                    border: "none",
+                                    cursor: "pointer",
+                                    background: row.paid ? "var(--success, #16a34a)" : "var(--border)",
+                                    color: row.paid ? "#fff" : "var(--muted)",
+                                  }}
+                                >
+                                  {row.paid ? "支払い済み" : "未払い"}
+                                </button>
+                              )}
+                            </div>
+                            {payingRow?.id === row.id && (
+                              <div style={{ padding: "8px 14px 12px", background: "var(--surface)", borderBottom: "1px solid var(--border)" }}>
+                                <div style={{ display: "flex", gap: 8 }}>
+                                  <button
+                                    className="btn btn-primary"
+                                    style={{ flex: 1, fontSize: "0.8125rem" }}
+                                    onClick={() => { togglePaid(row); setPayingRow(null); }}
+                                  >
+                                    キャッシュレスで支払う
+                                  </button>
+                                  <button
+                                    className="btn btn-ghost"
+                                    style={{ flex: 1, fontSize: "0.8125rem" }}
+                                    onClick={() => { togglePaid(row); setPayingRow(null); }}
+                                  >
+                                    現金で支払う
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+                          </>
                         )}
                       </div>
                     ))}
@@ -355,8 +462,41 @@ export default function ParticipantPage() {
                   </div>
                   <div className="list" style={{ border: "none" }}>
                     {maybeRows.map((row) => (
-                      <div key={row.id} className="item">
-                        <span style={{ fontWeight: 500, fontSize: "0.9375rem" }}>{row.name}</span>
+                      <div key={row.id}>
+                        {editingRow?.id === row.id ? (
+                          <div style={{ padding: "8px 14px 12px" }}>
+                            <input
+                              className="input"
+                              value={editingRow.name}
+                              onChange={(e) => setEditingRow({ ...editingRow, name: e.target.value })}
+                              onBlur={() => editingRow.name.trim() && saveEdit(row, { name: editingRow.name })}
+                              onKeyDown={(e) => { if (e.key === "Enter") { e.currentTarget.blur(); } }}
+                              style={{ marginBottom: 8 }}
+                              autoFocus
+                            />
+                            <div className="grid3">
+                              {(["yes", "maybe", "no"] as const).map((v) => (
+                                <button
+                                  key={v}
+                                  className={`btn ${editingRow.rsvp === v ? "btn-primary" : "btn-ghost"}`}
+                                  style={{ fontSize: "0.8125rem" }}
+                                  onClick={() => saveEdit(row, { rsvp: v })}
+                                >
+                                  {v === "yes" ? "参加" : v === "maybe" ? "未定" : "不参加"}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="item">
+                            <span
+                              style={{ fontWeight: 500, fontSize: "0.9375rem", cursor: "pointer", textDecoration: "underline", textDecorationColor: "var(--border)", textUnderlineOffset: 3 }}
+                              onClick={() => setEditingRow({ id: row.id, name: row.name, rsvp: row.rsvp })}
+                            >
+                              {row.name}
+                            </span>
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -371,8 +511,41 @@ export default function ParticipantPage() {
                   </div>
                   <div className="list" style={{ border: "none" }}>
                     {noRows.map((row) => (
-                      <div key={row.id} className="item">
-                        <span style={{ fontWeight: 500, fontSize: "0.9375rem", color: "var(--muted)" }}>{row.name}</span>
+                      <div key={row.id}>
+                        {editingRow?.id === row.id ? (
+                          <div style={{ padding: "8px 14px 12px" }}>
+                            <input
+                              className="input"
+                              value={editingRow.name}
+                              onChange={(e) => setEditingRow({ ...editingRow, name: e.target.value })}
+                              onBlur={() => editingRow.name.trim() && saveEdit(row, { name: editingRow.name })}
+                              onKeyDown={(e) => { if (e.key === "Enter") { e.currentTarget.blur(); } }}
+                              style={{ marginBottom: 8 }}
+                              autoFocus
+                            />
+                            <div className="grid3">
+                              {(["yes", "maybe", "no"] as const).map((v) => (
+                                <button
+                                  key={v}
+                                  className={`btn ${editingRow.rsvp === v ? "btn-primary" : "btn-ghost"}`}
+                                  style={{ fontSize: "0.8125rem" }}
+                                  onClick={() => saveEdit(row, { rsvp: v })}
+                                >
+                                  {v === "yes" ? "参加" : v === "maybe" ? "未定" : "不参加"}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="item">
+                            <span
+                              style={{ fontWeight: 500, fontSize: "0.9375rem", color: "var(--muted)", cursor: "pointer", textDecoration: "underline", textDecorationColor: "var(--border)", textUnderlineOffset: 3 }}
+                              onClick={() => setEditingRow({ id: row.id, name: row.name, rsvp: row.rsvp })}
+                            >
+                              {row.name}
+                            </span>
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>

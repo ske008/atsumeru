@@ -35,6 +35,10 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     updated_at: new Date().toISOString(),
   };
 
+  if (typeof body.name === "string" && body.name.trim()) {
+    updatePayload.name = body.name.trim();
+  }
+
   if (body.rsvp === "yes" || body.rsvp === "maybe" || body.rsvp === "no") {
     updatePayload.rsvp = body.rsvp;
   }
