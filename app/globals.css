@@ -1,13 +1,13 @@
 :root {
-  --bg: #fafaf8;
+  --bg: #fffbf5;
   --card: #ffffff;
   --text: #1a1a1a;
   --text-secondary: #6b7280;
   --border: #e5e7eb;
   --border-light: #f3f4f6;
-  --primary: #111827;
-  --primary-hover: #374151;
-  --primary-soft: #f3f4f6;
+  --primary: #fb923c;
+  --primary-hover: #f97316;
+  --primary-soft: #fff7ed;
   --accent: #2563eb;
   --accent-hover: #1d4ed8;
   --accent-soft: #eff6ff;
