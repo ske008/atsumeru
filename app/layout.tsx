@@ -1,8 +1,8 @@
-﻿import "./globals.css";
+import "./globals.css";
 import type { ReactNode } from "react";
 
 export const metadata = {
-  title: "Atsumeru",
+  title: "アツメル",
   description: "出欠と集金をシンプルに",
 };
 

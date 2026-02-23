@@ -1,7 +1,8 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 type EventForm = {
   title: string;
@@ -79,7 +80,7 @@ export default function NewEventPage() {
 
       router.push(`/event/${data.eventId}/manage?token=${data.ownerToken}`);
     } catch {
-      setStatus({ kind: "error", message: "通信エラーが発生しました。時間をおいて再試行してください。" });
+      setStatus({ kind: "error", message: "通信エラーが発生しました。" });
     } finally {
       setSubmitting(false);
     }
@@ -87,74 +88,93 @@ export default function NewEventPage() {
 
   return (
     <main className="container">
-      <div className="card">
-        <h1 className="h1">イベント作成</h1>
-        <p className="hint">作成後に管理ページへ移動します。</p>
+      <div className="stack">
+        <div className="row-between">
+          <h1 className="h1">イベント作成</h1>
+          <Link href="/" className="btn btn-ghost btn-sm">戻る</Link>
+        </div>
 
-        <div className="stack" style={{ marginTop: 12 }}>
-          <input
-            className="input"
-            placeholder="イベント名（例: 3月の飲み会）"
-            value={form.title}
-            onChange={(e) => setForm({ ...form, title: e.target.value })}
-          />
-          <input
-            className="input"
-            type="datetime-local"
-            value={form.date}
-            onChange={(e) => setForm({ ...form, date: e.target.value })}
-          />
-          <input
-            className="input"
-            placeholder="場所（任意）"
-            value={form.place}
-            onChange={(e) => setForm({ ...form, place: e.target.value })}
-          />
-          <input
-            className="input"
-            placeholder="メモ（任意）"
-            value={form.note}
-            onChange={(e) => setForm({ ...form, note: e.target.value })}
-          />
-
-          <label className="row" style={{ minHeight: 44 }}>
-            <input
-              type="checkbox"
-              checked={form.collecting}
-              onChange={(e) => setForm({ ...form, collecting: e.target.checked })}
-            />
-            作成と同時に集金を開始する
-          </label>
-
-          <div className="money-field collect-panel">
-            <p className="section-label">集金設定</p>
-            <div className="money-input-wrap">
+        <div className="card">
+          <div className="stack">
+            <div className="stack-sm">
+              <p className="section-label">基本情報</p>
               <input
                 className="input"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                placeholder="集金金額"
-                value={form.amount}
-                onChange={(e) => setForm({ ...form, amount: normalizeAmountInput(e.target.value) })}
+                placeholder="イベント名（例: 3月の飲み会）"
+                value={form.title}
+                onChange={(e) => setForm({ ...form, title: e.target.value })}
               />
-              <span className="money-suffix">円</span>
+              <input
+                className="input"
+                type="datetime-local"
+                value={form.date}
+                onChange={(e) => setForm({ ...form, date: e.target.value })}
+              />
+              <input
+                className="input"
+                placeholder="場所（任意）"
+                value={form.place}
+                onChange={(e) => setForm({ ...form, place: e.target.value })}
+              />
+              <input
+                className="input"
+                placeholder="メモ（任意）"
+                value={form.note}
+                onChange={(e) => setForm({ ...form, note: e.target.value })}
+              />
             </div>
-            <p className="hint hint-inline">数字のみ入力（例: 3500）</p>
-            <p className="amount-preview">1人あたり {amountPreview}円</p>
+
+            <div className="divider" />
+
+            <div className="stack-sm">
+              <label className="checkbox-row">
+                <input
+                  type="checkbox"
+                  checked={form.collecting}
+                  onChange={(e) => setForm({ ...form, collecting: e.target.checked })}
+                />
+                集金を開始する
+              </label>
+
+              {form.collecting && (
+                <div className="collect-panel">
+                  <div className="stack-sm">
+                    <p className="section-label">集金設定</p>
+                    <div className="money-input-wrap">
+                      <input
+                        className="input"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        placeholder="金額"
+                        value={form.amount}
+                        onChange={(e) => setForm({ ...form, amount: normalizeAmountInput(e.target.value) })}
+                      />
+                      <span className="money-suffix">円</span>
+                    </div>
+                    {normalizedAmount > 0 && (
+                      <p className="amount-preview">1人あたり {amountPreview}円</p>
+                    )}
+                    <input
+                      className="input"
+                      placeholder="送金URL（PayPay等・任意）"
+                      value={form.payUrl}
+                      onChange={(e) => setForm({ ...form, payUrl: e.target.value })}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {status && (
+              <p className={`status ${status.kind === "error" ? "status-error" : "status-info"}`}>
+                {status.message}
+              </p>
+            )}
+
+            <button className="btn btn-primary btn-full" onClick={submit} disabled={submitting}>
+              {submitting ? "作成中..." : "作成して管理ページへ"}
+            </button>
           </div>
-
-          <input
-            className="input"
-            placeholder="送金URL（任意）"
-            value={form.payUrl}
-            onChange={(e) => setForm({ ...form, payUrl: e.target.value })}
-          />
-
-          {status && <p className={`status ${status.kind === "error" ? "status-error" : "status-info"}`}>{status.message}</p>}
-
-          <button className="btn btn-primary" onClick={submit} disabled={submitting}>
-            {submitting ? "作成中..." : "作成して管理ページへ"}
-          </button>
         </div>
       </div>
     </main>

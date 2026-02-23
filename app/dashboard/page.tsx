@@ -1,4 +1,4 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 import { supabaseAdmin } from "@/lib/supabase";
 
 type EventRow = {
@@ -8,6 +8,7 @@ type EventRow = {
   place: string | null;
   collecting: boolean;
   amount: number;
+  owner_token: string;
   created_at: string;
 };
 
@@ -21,48 +22,57 @@ type ResponseRow = {
 
 function fmtDate(value: string | null) {
   if (!value) return "日時未設定";
-  return new Date(value).toLocaleString("ja-JP");
+  try {
+    return new Date(value).toLocaleString("ja-JP", {
+      month: "long",
+      day: "numeric",
+      weekday: "short",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  } catch {
+    return value;
+  }
 }
 
 export default async function DashboardPage() {
   if (!supabaseAdmin) {
     return (
       <main className="container">
-        <section className="card">
+        <div className="card hero">
           <h1 className="h1">全体ダッシュボード</h1>
-          <p className="status status-error" style={{ marginTop: 12 }}>
-            Supabase 環境変数が不足しています（SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY）。
+          <p className="status status-error" style={{ marginTop: 16 }}>
+            環境変数が不足しています（SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY）。
           </p>
-          <div style={{ marginTop: 12 }}>
-            <Link className="btn btn-ghost" href="/">
-              ホームへ戻る
-            </Link>
+          <div style={{ marginTop: 16 }}>
+            <Link className="btn btn-ghost" href="/">ホームへ戻る</Link>
           </div>
-        </section>
+        </div>
       </main>
     );
   }
 
-  const [{ data: events, error: eventsError }, { data: responses, error: responsesError }] = await Promise.all([
-    supabaseAdmin
-      .from("events")
-      .select("id,title,date,place,collecting,amount,created_at")
-      .order("created_at", { ascending: false }),
-    supabaseAdmin
-      .from("responses")
-      .select("id,event_id,name,rsvp,paid")
-      .order("created_at", { ascending: true }),
-  ]);
+  const [{ data: events, error: eventsError }, { data: responses, error: responsesError }] =
+    await Promise.all([
+      supabaseAdmin
+        .from("events")
+        .select("id,title,date,place,collecting,amount,owner_token,created_at")
+        .order("created_at", { ascending: false }),
+      supabaseAdmin
+        .from("responses")
+        .select("id,event_id,name,rsvp,paid")
+        .order("created_at", { ascending: true }),
+    ]);
 
   if (eventsError || responsesError) {
     return (
       <main className="container">
-        <section className="card">
+        <div className="card hero">
           <h1 className="h1">全体ダッシュボード</h1>
-          <p className="status status-error" style={{ marginTop: 12 }}>
-            データ取得に失敗しました。時間をおいて再試行してください。
+          <p className="status status-error" style={{ marginTop: 16 }}>
+            データ取得に失敗しました。
           </p>
-        </section>
+        </div>
       </main>
     );
   }
@@ -72,95 +82,77 @@ export default async function DashboardPage() {
 
   const totalYes = responseList.filter((r) => r.rsvp === "yes").length;
   const totalPaid = responseList.filter((r) => r.rsvp === "yes" && r.paid).length;
-  const totalUnpaid = totalYes - totalPaid;
 
   return (
     <main className="container">
       <div className="stack">
-        <section className="card">
-          <div className="row-between">
-            <div>
-              <h1 className="h1">全体ダッシュボード</h1>
-              <p className="hint">イベント全体の出欠・支払い状況を確認できます。</p>
-            </div>
-            <Link className="btn btn-ghost" href="/">
-              ホーム
-            </Link>
-          </div>
-        </section>
+        <div className="row-between">
+          <h1 className="h1">ダッシュボード</h1>
+          <Link className="btn btn-ghost btn-sm" href="/">ホーム</Link>
+        </div>
 
-        <section className="card">
-          <div className="list">
-            <div className="item row-between">
-              <strong>イベント数</strong>
-              <span className="badge">{eventList.length}</span>
-            </div>
-            <div className="item row-between">
-              <strong>参加（はい）合計</strong>
-              <span className="badge">{totalYes}</span>
-            </div>
-            <div className="item row-between">
-              <strong>支払い済み</strong>
-              <span className="badge">{totalPaid}</span>
-            </div>
-            <div className="item row-between">
-              <strong>未払い</strong>
-              <span className="badge">{totalUnpaid}</span>
+        {/* Stats */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
+          <div className="card" style={{ textAlign: "center", padding: 16 }}>
+            <p className="stat-value">{eventList.length}</p>
+            <p className="stat-label">イベント</p>
+          </div>
+          <div className="card" style={{ textAlign: "center", padding: 16 }}>
+            <p className="stat-value">{totalYes}</p>
+            <p className="stat-label">参加者</p>
+          </div>
+          <div className="card" style={{ textAlign: "center", padding: 16 }}>
+            <p className="stat-value">{totalPaid}</p>
+            <p className="stat-label">支払い済み</p>
+          </div>
+        </div>
+
+        {/* Event List */}
+        {eventList.length === 0 && (
+          <div className="card" style={{ textAlign: "center", padding: 32 }}>
+            <p className="hint" style={{ marginTop: 0 }}>まだイベントがありません。</p>
+            <div style={{ marginTop: 12 }}>
+              <Link className="btn btn-primary" href="/event/new">最初のイベントを作成</Link>
             </div>
           </div>
-        </section>
+        )}
 
         {eventList.map((event) => {
           const rows = responseList.filter((r) => r.event_id === event.id);
-          const yesRows = rows.filter((r) => r.rsvp === "yes");
-          const maybeRows = rows.filter((r) => r.rsvp === "maybe");
-          const noRows = rows.filter((r) => r.rsvp === "no");
-          const paidRows = yesRows.filter((r) => r.paid);
-          const unpaidRows = yesRows.filter((r) => !r.paid);
+          const yesCount = rows.filter((r) => r.rsvp === "yes").length;
+          const maybeCount = rows.filter((r) => r.rsvp === "maybe").length;
+          const paidCount = rows.filter((r) => r.rsvp === "yes" && r.paid).length;
+          const paidRatio = yesCount > 0 ? (paidCount / yesCount) * 100 : 0;
 
           return (
-            <section className="card" key={event.id}>
-              <div className="row-between" style={{ alignItems: "flex-start" }}>
+            <div className="card" key={event.id}>
+              <div className="row-between row-between-mobile">
                 <div>
                   <h2 className="h2">{event.title}</h2>
                   <p className="hint">
                     {fmtDate(event.date)}
                     {event.place ? ` / ${event.place}` : ""}
                   </p>
-                  <p className="hint">作成日: {fmtDate(event.created_at)}</p>
                 </div>
-                <Link className="btn btn-ghost" href={`/event/${event.id}/manage`}>
-                  管理ページ
+                <Link className="btn btn-ghost btn-sm" href={`/event/${event.id}/manage?token=${event.owner_token}`}>
+                  管理
                 </Link>
               </div>
 
-              <div className="list" style={{ marginTop: 10 }}>
-                <div className="item row-between">
-                  <span>参加（はい）</span>
-                  <strong>{yesRows.length}</strong>
-                </div>
-                <div className="item row-between">
-                  <span>未定</span>
-                  <strong>{maybeRows.length}</strong>
-                </div>
-                <div className="item row-between">
-                  <span>不参加</span>
-                  <strong>{noRows.length}</strong>
-                </div>
+              <div style={{ display: "flex", gap: 6, marginTop: 12, flexWrap: "wrap" }}>
+                <span className="badge badge-success">{yesCount} 参加</span>
+                {maybeCount > 0 && <span className="badge badge-warn">{maybeCount} 未定</span>}
                 {event.collecting && (
-                  <>
-                    <div className="item row-between">
-                      <span>支払い済み</span>
-                      <strong>{paidRows.length}</strong>
-                    </div>
-                    <div className="item row-between">
-                      <span>未払い</span>
-                      <strong>{unpaidRows.length}</strong>
-                    </div>
-                  </>
+                  <span className="badge badge-accent">{paidCount}/{yesCount} 支払い済み</span>
                 )}
               </div>
-            </section>
+
+              {event.collecting && yesCount > 0 && (
+                <div className="progress-bar">
+                  <div className="progress-fill" style={{ width: `${paidRatio}%` }} />
+                </div>
+              )}
+            </div>
           );
         })}
       </div>

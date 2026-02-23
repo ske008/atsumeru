@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
@@ -20,31 +20,12 @@ type ResponseRow = {
   rsvp: "yes" | "maybe" | "no";
   paid: boolean;
   edit_token: string;
-  created_at?: string;
 };
 
-type Step = "rsvp" | "rsvp_done" | "paying" | "confirm" | "done";
-
-const STORAGE_KEY = "atsumeru_tokens";
-
-function saveToken(eventId: string, responseId: string, editToken: string) {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    const tokens = raw ? JSON.parse(raw) : {};
-    tokens[eventId] = { responseId, editToken };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(tokens));
-  } catch {}
-}
-
-function loadToken(eventId: string): { responseId: string; editToken: string } | null {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
-    const tokens = JSON.parse(raw);
-    return tokens[eventId] || null;
-  } catch {
-    return null;
-  }
+function ensureAbsoluteUrl(url: string): string {
+  const trimmed = url.trim();
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  return `https://${trimmed}`;
 }
 
 const RSVP_LABEL: Record<ResponseRow["rsvp"], string> = {
@@ -53,153 +34,110 @@ const RSVP_LABEL: Record<ResponseRow["rsvp"], string> = {
   no: "不参加",
 };
 
+function formatDate(value: string | null) {
+  if (!value) return null;
+  try {
+    return new Date(value).toLocaleString("ja-JP", {
+      month: "long",
+      day: "numeric",
+      weekday: "short",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  } catch {
+    return value;
+  }
+}
+
+// 参加登録直後の支払い待ち
+type JustSubmitted = {
+  name: string;
+  responseId: string;
+  editToken: string;
+};
+
 export default function ParticipantPage() {
   const params = useParams<{ eventId: string }>();
   const [event, setEvent] = useState<EventRow | null>(null);
   const [responses, setResponses] = useState<ResponseRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [step, setStep] = useState<Step>("rsvp");
 
   const [name, setName] = useState("");
-  const [myName, setMyName] = useState("");
-  const [myRsvp, setMyRsvp] = useState<ResponseRow["rsvp"] | "">("");
-
-  const [editingResponseId, setEditingResponseId] = useState<string | null>(null);
-  const [editingToken, setEditingToken] = useState<string | null>(null);
-
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
 
+  // 参加登録直後 → 支払い選択を表示するため
+  const [justSubmitted, setJustSubmitted] = useState<JustSubmitted | null>(null);
+
   const yesRows = useMemo(() => responses.filter((r) => r.rsvp === "yes"), [responses]);
+  const maybeRows = useMemo(() => responses.filter((r) => r.rsvp === "maybe"), [responses]);
+  const noRows = useMemo(() => responses.filter((r) => r.rsvp === "no"), [responses]);
 
-  const loadAll = async () => {
-    setLoading(true);
+  const fetchResponses = async () => {
     try {
-      const [eventRes, listRes] = await Promise.all([
-        fetch(`/api/events/${params.eventId}`),
-        fetch(`/api/events/${params.eventId}/responses/public`),
-      ]);
-
-      if (!eventRes.ok) {
-        setError("イベントが見つかりません。");
-        setLoading(false);
-        return;
+      const res = await fetch(`/api/events/${params.eventId}/responses/public`);
+      if (res.ok) {
+        const data = await res.json();
+        setResponses((data.responses || []) as ResponseRow[]);
       }
-
-      const eventData = await eventRes.json();
-      setEvent(eventData);
-
-      if (listRes.ok) {
-        const listData = await listRes.json();
-        setResponses((listData.responses || []) as ResponseRow[]);
-      }
-
-      const saved = loadToken(params.eventId);
-      if (saved && !editingResponseId) {
-        setStep("rsvp_done");
-      }
-    } catch {
-      setError("通信エラーが発生しました。");
-    }
-    setLoading(false);
+    } catch {}
   };
 
   useEffect(() => {
-    loadAll();
+    (async () => {
+      try {
+        const [eventRes, listRes] = await Promise.all([
+          fetch(`/api/events/${params.eventId}`),
+          fetch(`/api/events/${params.eventId}/responses/public`),
+        ]);
+
+        if (!eventRes.ok) {
+          setError("イベントが見つかりません。");
+          setLoading(false);
+          return;
+        }
+
+        setEvent(await eventRes.json());
+
+        if (listRes.ok) {
+          const data = await listRes.json();
+          setResponses((data.responses || []) as ResponseRow[]);
+        }
+      } catch {
+        setError("通信エラーが発生しました。");
+      }
+      setLoading(false);
+    })();
   }, [params.eventId]);
-
-  useEffect(() => {
-    if (step !== "paying") return;
-    const onVisibility = () => {
-      if (document.visibilityState === "visible") setStep("confirm");
-    };
-    const onFocus = () => setStep("confirm");
-    document.addEventListener("visibilitychange", onVisibility);
-    window.addEventListener("focus", onFocus);
-    return () => {
-      document.removeEventListener("visibilitychange", onVisibility);
-      window.removeEventListener("focus", onFocus);
-    };
-  }, [step]);
-
-  const startEditing = (row: ResponseRow) => {
-    setEditingResponseId(row.id);
-    setEditingToken(row.edit_token);
-    setName(row.name);
-    setMyName(row.name);
-    setMyRsvp(row.rsvp);
-    setNotice(`「${row.name}」の回答を編集中です。`);
-    setError("");
-    setStep("rsvp");
-  };
-
-  const clearEditing = () => {
-    setEditingResponseId(null);
-    setEditingToken(null);
-    setName("");
-    setNotice("");
-  };
 
   const submitRsvp = async (rsvp: "yes" | "maybe" | "no") => {
     const trimmed = name.trim();
-    if (!trimmed) {
-      setError("名前を入力してください。");
-      return;
-    }
+    if (!trimmed) { setError("名前を入力してください。"); return; }
 
     setSubmitting(true);
     setError("");
+    setNotice("");
 
     try {
-      if (editingResponseId && editingToken) {
-        const patchBody: Record<string, unknown> = { rsvp };
-        if (rsvp !== "yes") {
-          patchBody.paid = false;
-        }
+      const res = await fetch(`/api/events/${params.eventId}/responses`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: trimmed, rsvp }),
+      });
+      const data = await res.json();
 
-        const res = await fetch(`/api/events/${params.eventId}/responses/${editingResponseId}?edit=${editingToken}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(patchBody),
-        });
+      if (!res.ok) { setError(data.error || "送信に失敗しました。"); return; }
 
-        const data = await res.json();
-        if (!res.ok) {
-          setError(data.error || "回答の更新に失敗しました。");
-          return;
-        }
+      // 一覧を更新
+      await fetchResponses();
+      setName("");
 
-        saveToken(params.eventId, editingResponseId, editingToken);
+      // 集金ありで「参加」→ 支払い選択を表示
+      if (rsvp === "yes" && event?.collecting) {
+        setJustSubmitted({ name: trimmed, responseId: data.responseId, editToken: data.editToken });
       } else {
-        const res = await fetch(`/api/events/${params.eventId}/responses`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name: trimmed, rsvp }),
-        });
-        const data = await res.json();
-
-        if (!res.ok) {
-          setError(data.error || "回答の送信に失敗しました。");
-          return;
-        }
-
-        saveToken(params.eventId, data.responseId, data.editToken);
-        setEditingResponseId(data.responseId);
-        setEditingToken(data.editToken);
-      }
-
-      setMyName(trimmed);
-      setMyRsvp(rsvp);
-      await loadAll();
-
-      if (rsvp === "yes" && event?.collecting && event.pay_url) {
-        setStep("paying");
-        setTimeout(() => window.open(event.pay_url!, "_blank"), 100);
-      } else if (rsvp === "yes" && event?.collecting) {
-        setStep("confirm");
-      } else {
-        setStep("rsvp_done");
+        setNotice(`${trimmed} の回答を送信しました。`);
       }
     } catch {
       setError("通信エラーが発生しました。");
@@ -208,235 +146,181 @@ export default function ParticipantPage() {
     }
   };
 
-  const markPaidSelf = async () => {
-    if (!editingResponseId || !editingToken) {
-      setError("編集対象の行を選んでください。");
-      return;
-    }
+  const markPaid = async () => {
+    if (!justSubmitted) return;
 
     try {
-      const res = await fetch(`/api/events/${params.eventId}/responses/${editingResponseId}?edit=${editingToken}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ paid: true }),
-      });
-      const data = await res.json();
+      const res = await fetch(
+        `/api/events/${params.eventId}/responses/${justSubmitted.responseId}?edit=${justSubmitted.editToken}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ paid: true }),
+        }
+      );
       if (!res.ok) {
-        setError(data.error || "支払い状態の更新に失敗しました。");
+        const data = await res.json();
+        setError(data.error || "更新に失敗しました。");
         return;
       }
-      await loadAll();
-      setStep("done");
+      // ローカルで即反映
+      setResponses((prev) =>
+        prev.map((r) => (r.id === justSubmitted.responseId ? { ...r, paid: true } : r))
+      );
+      setNotice(`${justSubmitted.name} の支払いを記録しました。`);
     } catch {
       setError("通信エラーが発生しました。");
     }
+    setJustSubmitted(null);
   };
 
-  const confirmPaid = async () => {
-    const saved = loadToken(params.eventId);
-    if (!saved) {
-      setError("先に回答を登録してください。");
-      return;
+  const skipPay = () => {
+    if (justSubmitted) {
+      setNotice(`${justSubmitted.name} の参加を登録しました。`);
     }
+    setJustSubmitted(null);
+  };
 
+  const togglePaid = async (row: ResponseRow) => {
     try {
-      await fetch(`/api/events/${params.eventId}/responses/${saved.responseId}?edit=${saved.editToken}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ paid: true }),
-      });
-      await loadAll();
-      setStep("done");
-    } catch {
-      setError("通信エラーが発生しました。");
-    }
-  };
-
-  const openPayLink = () => {
-    if (event?.pay_url) {
-      setStep("paying");
-      setTimeout(() => window.open(event.pay_url!, "_blank"), 100);
-    } else {
-      setStep("confirm");
-    }
+      const res = await fetch(
+        `/api/events/${params.eventId}/responses/${row.id}?edit=${row.edit_token}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ paid: !row.paid }),
+        }
+      );
+      if (!res.ok) return;
+      setResponses((prev) =>
+        prev.map((r) => (r.id === row.id ? { ...r, paid: !row.paid } : r))
+      );
+    } catch {}
   };
 
   if (loading) {
-    return (
-      <main className="container">
-        <div className="card" style={{ textAlign: "center", padding: 32 }}>
-          <p className="hint">読み込み中...</p>
-        </div>
-      </main>
-    );
+    return <main className="container"><div className="card hero"><p className="hint">読み込み中...</p></div></main>;
   }
 
   if (error && !event) {
-    return (
-      <main className="container">
-        <div className="card" style={{ textAlign: "center", padding: 32 }}>
-          <p className="status status-error">{error}</p>
-        </div>
-      </main>
-    );
+    return <main className="container"><div className="card hero"><p className="status status-error">{error}</p></div></main>;
   }
 
   if (!event) return null;
 
-  if (step === "done") {
-    return (
-      <main className="container">
-        <div className="card" style={{ textAlign: "center", padding: 32 }}>
-          <p className="badge" style={{ background: "var(--primary-soft)", color: "var(--primary)", marginBottom: 12 }}>完了</p>
-          <h2 className="h2">支払い報告を受け付けました</h2>
-          <p className="hint">ありがとうございます。</p>
-          <div style={{ marginTop: 12 }}>
-            <button className="btn btn-ghost" onClick={() => setStep("rsvp_done")}>一覧に戻る</button>
-          </div>
-        </div>
-      </main>
-    );
-  }
-
-  if (step === "confirm") {
-    return (
-      <main className="container">
-        <div className="card" style={{ textAlign: "center", padding: 32 }}>
-          <h2 className="h2">支払いは完了しましたか？</h2>
-          <p className="hint" style={{ marginBottom: 20 }}>{myName} さんの支払い状況を更新します。</p>
-          <div className="stack">
-            <button className="btn btn-primary" onClick={confirmPaid}>支払い済みにする</button>
-            <button className="btn btn-ghost" onClick={() => setStep("rsvp_done")}>あとで報告する</button>
-          </div>
-        </div>
-      </main>
-    );
-  }
-
-  if (step === "paying") {
-    return (
-      <main className="container">
-        <div className="card" style={{ textAlign: "center", padding: 32 }}>
-          <h2 className="h2">支払いページを開いています</h2>
-          <p className="hint" style={{ marginBottom: 20 }}>支払い後にこのページへ戻ってください。</p>
-          <button className="btn btn-ghost" onClick={() => setStep("confirm")}>支払い後に確認する</button>
-        </div>
-      </main>
-    );
-  }
-
-  if (step === "rsvp_done") {
-    return (
-      <main className="container">
-        <div className="stack">
-          <div className="card" style={{ textAlign: "center" }}>
-            <div className="badge" style={{ background: "var(--primary-soft)", color: "var(--primary)", marginBottom: 12 }}>回答済み</div>
-            <h2 className="h2">{event.title}</h2>
-            <p className="hint">{myName ? `${myName} さん` : "あなた"} / {myRsvp ? RSVP_LABEL[myRsvp] : "-"}</p>
-            <div style={{ marginTop: 12 }}>
-              <button className="btn btn-ghost" onClick={() => setStep("rsvp")}>回答を変更する</button>
-            </div>
-          </div>
-
-          {event.collecting && myRsvp === "yes" && (
-            <div className="card">
-              <h2 className="h2" style={{ textAlign: "center" }}>¥{event.amount.toLocaleString()}</h2>
-              <p className="hint" style={{ textAlign: "center" }}>支払い金額</p>
-              <div style={{ marginTop: 12 }}>
-                {event.pay_url ? (
-                  <button className="btn btn-primary" style={{ width: "100%" }} onClick={openPayLink}>支払いページを開く</button>
-                ) : (
-                  <button className="btn btn-primary" style={{ width: "100%" }} onClick={() => setStep("confirm")}>支払い済みを報告する</button>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
-      </main>
-    );
-  }
-
   return (
     <main className="container">
       <div className="stack">
+        {/* イベント情報 */}
         <div className="card">
           <h1 className="h1">{event.title}</h1>
-          <p className="hint">
-            {event.date || "日時未設定"}
-            {event.place ? ` / ${event.place}` : ""}
-          </p>
+          <div className="hint" style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {formatDate(event.date) && <span>{formatDate(event.date)}</span>}
+            {event.place && <span>{event.place}</span>}
+          </div>
           {event.note && <p className="hint">{event.note}</p>}
-        </div>
-
-        <div className="card">
-          <h2 className="h2">出欠を回答する</h2>
-          <p className="hint">一覧の名前を押すと、その行を編集できます。同名は別行として追加されます。</p>
-
-          <div className="stack" style={{ marginTop: 12 }}>
-            <input className="input" placeholder="名前" value={name} onChange={(e) => setName(e.target.value)} />
-            {editingResponseId && <p className="status status-info">編集中の行ID: {editingResponseId.slice(0, 8)}...</p>}
-            {notice && <p className="status status-info">{notice}</p>}
-            {error && <p className="status status-error">{error}</p>}
-
-            <div className="grid3">
-              <button className="btn btn-primary" onClick={() => submitRsvp("yes")} disabled={submitting}>参加</button>
-              <button className="btn btn-ghost" onClick={() => submitRsvp("maybe")} disabled={submitting}>未定</button>
-              <button className="btn btn-danger" onClick={() => submitRsvp("no")} disabled={submitting}>不参加</button>
+          {event.collecting && event.amount > 0 && (
+            <div style={{ marginTop: 12 }}>
+              <span className="badge badge-accent">&yen;{event.amount.toLocaleString()} / 人</span>
             </div>
-
-            {event.collecting && editingResponseId && (
-              <button className="btn btn-primary" onClick={markPaidSelf} disabled={submitting}>
-                この行を支払い済みにする
-              </button>
-            )}
-
-            {editingResponseId && (
-              <button className="btn btn-ghost" onClick={clearEditing}>
-                編集をやめる
-              </button>
-            )}
-          </div>
+          )}
         </div>
 
-        <div className="card">
-          <div className="row-between">
-            <h2 className="h2">回答一覧</h2>
-            <span className="badge">{responses.length} 件</span>
-          </div>
-
-          <div className="list" style={{ marginTop: 10 }}>
-            {responses.length === 0 && <div className="item hint">まだ回答がありません。</div>}
-            {responses.map((row) => (
-              <button
-                key={row.id}
-                className="item row-between"
-                style={{ background: "#fff", cursor: "pointer", textAlign: "left" }}
-                onClick={() => startEditing(row)}
-                type="button"
-              >
-                <div>
-                  <div style={{ fontWeight: 700 }}>{row.name}</div>
-                  <div className="hint">{RSVP_LABEL[row.rsvp]}</div>
-                </div>
-                {event.collecting && row.rsvp === "yes" ? (
-                  <span className="badge">{row.paid ? "支払い済み" : "未払い"}</span>
-                ) : (
-                  <span className="badge">-</span>
-                )}
+        {/* 支払い選択（参加登録直後に表示） */}
+        {justSubmitted && (
+          <div className="card">
+            <h2 className="h2">{justSubmitted.name} さん、支払いはどうしますか？</h2>
+            {event.amount > 0 && (
+              <p className="hint" style={{ marginTop: 4 }}>&yen;{event.amount.toLocaleString()}</p>
+            )}
+            {event.pay_url && (
+              <div style={{ marginTop: 12 }}>
+                <a
+                  href={ensureAbsoluteUrl(event.pay_url)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn-accent btn-full"
+                >
+                  送金ページを開く
+                </a>
+              </div>
+            )}
+            <div className="grid3" style={{ marginTop: 12, gridTemplateColumns: "1fr 1fr" }}>
+              <button className="btn btn-primary" onClick={markPaid}>
+                支払い済み
               </button>
+              <button className="btn btn-ghost" onClick={skipPay}>
+                あとで払う
+              </button>
+            </div>
+            {error && <p className="status status-error" style={{ marginTop: 8 }}>{error}</p>}
+          </div>
+        )}
+
+        {/* フォーム（支払い選択中は非表示） */}
+        {!justSubmitted && (
+          <div className="card">
+            <h2 className="h2">出欠を回答する</h2>
+            <div className="stack" style={{ marginTop: 14 }}>
+              <input
+                className="input"
+                placeholder="名前"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
+              {notice && <p className="status status-info">{notice}</p>}
+              {error && <p className="status status-error">{error}</p>}
+              <div className="grid3">
+                <button className="btn btn-primary" onClick={() => submitRsvp("yes")} disabled={submitting}>
+                  参加
+                </button>
+                <button className="btn btn-ghost" onClick={() => submitRsvp("maybe")} disabled={submitting}>
+                  未定
+                </button>
+                <button className="btn btn-danger" onClick={() => submitRsvp("no")} disabled={submitting}>
+                  不参加
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 回答一覧 */}
+        <div className="card-flush">
+          <div style={{ padding: "14px 14px 8px" }}>
+            <div className="row-between">
+              <p className="h2">回答一覧</p>
+              <div className="row" style={{ gap: 6 }}>
+                {yesRows.length > 0 && <span className="badge badge-success">{yesRows.length} 参加</span>}
+                {maybeRows.length > 0 && <span className="badge badge-warn">{maybeRows.length} 未定</span>}
+                {noRows.length > 0 && <span className="badge">{noRows.length} 不参加</span>}
+              </div>
+            </div>
+          </div>
+          <div className="list" style={{ border: "none", borderTop: "1px solid var(--border)" }}>
+            {responses.length === 0 && (
+              <div className="item">
+                <span className="hint" style={{ marginTop: 0 }}>まだ回答がありません。</span>
+              </div>
+            )}
+            {responses.map((row) => (
+              <div key={row.id} className="item">
+                <div>
+                  <div style={{ fontWeight: 600, fontSize: "0.9375rem" }}>{row.name}</div>
+                  <div className="hint" style={{ marginTop: 0 }}>{RSVP_LABEL[row.rsvp]}</div>
+                </div>
+                {event.collecting && row.rsvp === "yes" && (
+                  <button
+                    className={`btn btn-sm ${row.paid ? "btn-primary" : "btn-ghost"}`}
+                    onClick={() => togglePaid(row)}
+                  >
+                    {row.paid ? "支払い済み" : "未払い"}
+                  </button>
+                )}
+              </div>
             ))}
           </div>
         </div>
-
-        {event.collecting && (
-          <div className="card">
-            <div className="row-between">
-              <p className="section-label">集金情報</p>
-              <span className="badge">参加 {yesRows.length} 名</span>
-            </div>
-            <p style={{ fontSize: "1.2rem", fontWeight: 700, marginTop: 4 }}>¥{event.amount.toLocaleString()}</p>
-          </div>
-        )}
       </div>
     </main>
   );

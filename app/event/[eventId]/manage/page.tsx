@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
@@ -46,6 +46,21 @@ const normalizeAmountInput = (value: string) =>
     .join("")
     .replace(/\D/g, "");
 
+function formatDate(value: string | null) {
+  if (!value) return "日時未設定";
+  try {
+    return new Date(value).toLocaleString("ja-JP", {
+      month: "long",
+      day: "numeric",
+      weekday: "short",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  } catch {
+    return value;
+  }
+}
+
 export default function ManagePage() {
   const params = useParams<{ eventId: string }>();
   const searchParams = useSearchParams();
@@ -61,6 +76,7 @@ export default function ManagePage() {
   const amountPreview = normalizedAmount.toLocaleString("ja-JP");
   const yesResponses = responses.filter((row) => row.rsvp === "yes");
   const paidResponses = yesResponses.filter((row) => row.paid);
+  const paidRatio = yesResponses.length > 0 ? (paidResponses.length / yesResponses.length) * 100 : 0;
 
   const participantUrl = useMemo(() => {
     if (typeof window === "undefined") return "";
@@ -68,8 +84,6 @@ export default function ManagePage() {
   }, [params.eventId]);
 
   const loadAll = async () => {
-    setStatus({ kind: "info", message: "読み込み中です..." });
-
     try {
       const eventRes = await fetch(`/api/events/${params.eventId}`);
       const eventData = await eventRes.json();
@@ -100,7 +114,7 @@ export default function ManagePage() {
       setResponses(responseData.responses || []);
       setStatus(null);
     } catch {
-      setStatus({ kind: "error", message: "通信エラーが発生しました。時間をおいて再試行してください。" });
+      setStatus({ kind: "error", message: "通信エラーが発生しました。" });
     }
   };
 
@@ -112,15 +126,15 @@ export default function ManagePage() {
     if (!participantUrl) return;
     try {
       await navigator.clipboard.writeText(participantUrl);
-      setStatus({ kind: "success", message: "参加者URLをコピーしました。" });
+      setStatus({ kind: "success", message: "URLをコピーしました。" });
     } catch {
-      setStatus({ kind: "error", message: "コピーに失敗しました。手動でURLを選択してコピーしてください。" });
+      setStatus({ kind: "error", message: "コピーに失敗しました。" });
     }
   };
 
   const saveCollecting = async () => {
     if (!token) {
-      setStatus({ kind: "error", message: "管理URLに token がありません。作成直後のURLを開いてください。" });
+      setStatus({ kind: "error", message: "管理トークンがありません。" });
       return;
     }
 
@@ -145,24 +159,23 @@ export default function ManagePage() {
 
       const data = await res.json();
       if (!res.ok) {
-        setStatus({ kind: "error", message: data.error || "集金設定の更新に失敗しました。" });
+        setStatus({ kind: "error", message: data.error || "設定の更新に失敗しました。" });
         return;
       }
 
-      setEvent((prev) => (prev ? { ...prev, collecting: data.collecting, amount: data.amount, pay_url: data.pay_url } : prev));
-      setStatus({ kind: "success", message: "集金設定を更新しました。" });
+      setEvent((prev) =>
+        prev ? { ...prev, collecting: data.collecting, amount: data.amount, pay_url: data.pay_url } : prev
+      );
+      setStatus({ kind: "success", message: "設定を更新しました。" });
     } catch {
-      setStatus({ kind: "error", message: "通信エラーが発生しました。時間をおいて再試行してください。" });
+      setStatus({ kind: "error", message: "通信エラーが発生しました。" });
     } finally {
       setSavingSetting(false);
     }
   };
 
   const togglePaid = async (row: ResponseRow) => {
-    if (!token) {
-      setStatus({ kind: "error", message: "管理URLに token がありません。作成直後のURLを開いてください。" });
-      return;
-    }
+    if (!token) return;
 
     try {
       const res = await fetch(`/api/events/${params.eventId}/responses/${row.id}/paid?token=${token}`, {
@@ -173,43 +186,55 @@ export default function ManagePage() {
       const data = await res.json();
 
       if (!res.ok) {
-        setStatus({ kind: "error", message: data.error || "支払い状態の更新に失敗しました。" });
+        setStatus({ kind: "error", message: data.error || "更新に失敗しました。" });
         return;
       }
 
-      setResponses((prev) => prev.map((item) => (item.id === row.id ? { ...item, paid: data.paid, paid_at: data.paid_at } : item)));
-      setStatus({ kind: "success", message: data.paid ? "支払い済みに更新しました。" : "未払いに戻しました。" });
+      setResponses((prev) =>
+        prev.map((item) => (item.id === row.id ? { ...item, paid: data.paid, paid_at: data.paid_at } : item))
+      );
     } catch {
-      setStatus({ kind: "error", message: "通信エラーが発生しました。時間をおいて再試行してください。" });
+      setStatus({ kind: "error", message: "通信エラーが発生しました。" });
     }
   };
 
   return (
     <main className="container">
       <div className="stack">
-        <section className="card">
-          <div className="row-between">
+        {/* Header */}
+        <div>
+          <div className="row-between row-between-mobile">
             <div>
-              <h1 className="h1">{event?.title || "イベント管理"}</h1>
-              <p className="hint">このページで出欠と集金状況を管理します。</p>
+              <h1 className="h1">{event?.title || "読み込み中..."}</h1>
+              {event && (
+                <p className="hint">
+                  {formatDate(event.date)}
+                  {event.place ? ` / ${event.place}` : ""}
+                </p>
+              )}
             </div>
-            <Link href={`/event/${params.eventId}`} className="btn btn-ghost">
-              参加者ページを見る
+            <Link href={`/event/${params.eventId}`} className="btn btn-ghost btn-sm">
+              参加者ページ
             </Link>
           </div>
-          {event && (
-            <p className="hint" style={{ marginTop: 8 }}>
-              {event.date || "日時未設定"}
-              {event.place ? ` / ${event.place}` : ""}
-            </p>
-          )}
-        </section>
+        </div>
 
-        <section className="card settings-card">
-          <h2 className="h2">設定</h2>
-          <p className="hint">出欠が0件でも、ここで先に集金情報を設定できます。</p>
-          <div className="stack" style={{ marginTop: 10 }}>
-            <label className="row" style={{ minHeight: 44 }}>
+        {status && <p className={`status status-${status.kind}`}>{status.message}</p>}
+
+        {/* Share URL */}
+        <div className="card">
+          <p className="section-label">参加者URL</p>
+          <div className="row" style={{ marginTop: 8 }}>
+            <input className="input" value={participantUrl} readOnly style={{ flex: 1 }} />
+            <button className="btn btn-primary btn-sm" onClick={copyParticipantUrl}>コピー</button>
+          </div>
+        </div>
+
+        {/* Collection Settings */}
+        <div className="card">
+          <p className="h2">集金設定</p>
+          <div className="stack" style={{ marginTop: 12 }}>
+            <label className="checkbox-row">
               <input
                 type="checkbox"
                 checked={form.collecting}
@@ -217,116 +242,90 @@ export default function ManagePage() {
               />
               集金を開始する
             </label>
-            <div className="money-field collect-panel">
-              <p className="section-label">集金金額</p>
-              <div className="money-input-wrap">
-                <input
-                  className="input"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                  placeholder="集金金額"
-                  value={form.amount}
-                  onChange={(e) => setForm((prev) => ({ ...prev, amount: normalizeAmountInput(e.target.value) }))}
-                />
-                <span className="money-suffix">円</span>
+
+            {form.collecting && (
+              <div className="collect-panel">
+                <div className="stack-sm">
+                  <div className="money-input-wrap">
+                    <input
+                      className="input"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      placeholder="金額"
+                      value={form.amount}
+                      onChange={(e) => setForm((prev) => ({ ...prev, amount: normalizeAmountInput(e.target.value) }))}
+                    />
+                    <span className="money-suffix">円</span>
+                  </div>
+                  {normalizedAmount > 0 && <p className="amount-preview">1人あたり {amountPreview}円</p>}
+                  <input
+                    className="input"
+                    placeholder="送金URL（PayPay等・任意）"
+                    value={form.payUrl}
+                    onChange={(e) => setForm((prev) => ({ ...prev, payUrl: e.target.value }))}
+                  />
+                </div>
               </div>
-              <p className="hint hint-inline">数字のみ入力（例: 3500）</p>
-              <p className="amount-preview">1人あたり {amountPreview}円</p>
-            </div>
-            <input
-              className="input"
-              placeholder="送金URL（任意）"
-              value={form.payUrl}
-              onChange={(e) => setForm((prev) => ({ ...prev, payUrl: e.target.value }))}
-            />
-            <button className="btn btn-primary" onClick={saveCollecting} disabled={savingSetting}>
-              {savingSetting ? "更新中..." : "設定を更新する"}
+            )}
+
+            <button className="btn btn-primary btn-full" onClick={saveCollecting} disabled={savingSetting}>
+              {savingSetting ? "更新中..." : "設定を保存"}
             </button>
           </div>
-        </section>
+        </div>
 
-        <section className="card">
-          <h2 className="h2">共有</h2>
-          <p className="hint">参加者にこのURLを共有してください。</p>
-          <div className="row" style={{ marginTop: 10 }}>
-            <input className="input" value={participantUrl} readOnly />
-            <button className="btn btn-primary" onClick={copyParticipantUrl}>参加者URLをコピー</button>
+        {/* Payment Progress */}
+        {form.collecting && yesResponses.length > 0 && (
+          <div className="card">
+            <div className="row-between">
+              <p className="h2">集金状況</p>
+              <span className="badge badge-success">
+                {paidResponses.length} / {yesResponses.length} 支払い済み
+              </span>
+            </div>
+            <div className="progress-bar">
+              <div className="progress-fill" style={{ width: `${paidRatio}%` }} />
+            </div>
           </div>
-        </section>
+        )}
 
-        <section className="card">
-          <h2 className="h2">回答一覧</h2>
-          {responses.length === 0 && (
-            <p className="status status-info" style={{ marginTop: 10 }}>
-              まだ回答がありません。
-            </p>
-          )}
-          {responses.length > 0 && (
-            <div className="list" style={{ marginTop: 10 }}>
+        {/* Responses */}
+        <div className="card-flush">
+          <div style={{ padding: "14px 14px 8px" }}>
+            <div className="row-between">
+              <p className="h2">回答一覧</p>
+              <span className="badge">{responses.length}件</span>
+            </div>
+          </div>
+
+          {responses.length === 0 ? (
+            <div style={{ padding: "12px 14px 16px" }}>
+              <p className="hint" style={{ marginTop: 0 }}>まだ回答がありません。</p>
+            </div>
+          ) : (
+            <div className="list" style={{ border: "none", borderTop: `1px solid var(--border)` }}>
               {responses.map((row) => (
-                <div key={row.id} className="item row-between">
+                <div key={row.id} className="item">
                   <div>
-                    <div>{row.name}</div>
-                    <div className="hint" style={{ marginTop: 4 }}>{RSVP_LABEL[row.rsvp]}</div>
+                    <div style={{ fontWeight: 600, fontSize: "0.9375rem" }}>{row.name}</div>
+                    <div className="hint" style={{ marginTop: 0 }}>{RSVP_LABEL[row.rsvp]}</div>
                   </div>
-                  {form.collecting ? (
-                    row.paid ? (
-                      <button className="btn btn-primary" onClick={() => togglePaid(row)}>未払いに戻す</button>
-                    ) : (
-                      <button className="btn btn-ghost" onClick={() => togglePaid(row)}>支払い済みにする</button>
-                    )
+                  {form.collecting && row.rsvp === "yes" ? (
+                    <button
+                      className={`btn btn-sm ${row.paid ? "btn-primary" : "btn-ghost"}`}
+                      onClick={() => togglePaid(row)}
+                    >
+                      {row.paid ? "支払い済み" : "未払い"}
+                    </button>
                   ) : (
-                    <span className="badge">集金OFF</span>
+                    <span className="badge">{RSVP_LABEL[row.rsvp]}</span>
                   )}
                 </div>
               ))}
             </div>
           )}
-        </section>
-
-        <section className="card">
-          <h2 className="h2">集金確認</h2>
-          {!form.collecting && (
-            <p className="status status-warn" style={{ marginTop: 10 }}>
-              集金を開始すると、この欄で支払い状況を確認できます。
-            </p>
-          )}
-          {form.collecting && (
-            <>
-              <p className="hint" style={{ marginTop: 10 }}>
-                支払い済み: {paidResponses.length} / {yesResponses.length}
-              </p>
-              {yesResponses.length === 0 && (
-                <p className="status status-info" style={{ marginTop: 10 }}>
-                  参加(はい)の回答がまだありません。
-                </p>
-              )}
-              {yesResponses.length > 0 && (
-                <div className="list" style={{ marginTop: 10 }}>
-                  {yesResponses.map((row) => (
-                    <div key={row.id} className="item row-between">
-                      <div>
-                        <div>{row.name}</div>
-                        <div className="hint" style={{ marginTop: 4 }}>
-                          {row.paid ? "支払い済み" : "未払い"}
-                        </div>
-                      </div>
-                      {row.paid ? (
-                        <button className="btn btn-primary" onClick={() => togglePaid(row)}>未払いに戻す</button>
-                      ) : (
-                        <button className="btn btn-ghost" onClick={() => togglePaid(row)}>支払い済みにする</button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </>
-          )}
-        </section>
-
-        {status && <p className={`status status-${status.kind}`}>{status.message}</p>}
+        </div>
       </div>
     </main>
   );
 }
-

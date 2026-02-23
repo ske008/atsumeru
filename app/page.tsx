@@ -1,32 +1,38 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 
 export default function HomePage() {
   return (
     <main className="container">
       <div className="stack">
-        <section className="card">
-          <h1 className="h1">出欠と集金を、これだけで</h1>
-          <p className="hint">説明なしで使える最小構成です。まずイベントを作成してください。</p>
-          <div style={{ marginTop: 12 }}>
-            <Link href="/event/new" className="btn btn-primary">
-              イベントを作成する
-            </Link>
-          </div>
-          <div style={{ marginTop: 8 }}>
-            <Link href="/dashboard" className="btn btn-ghost">
-              全体ダッシュボードを見る
-            </Link>
-          </div>
-        </section>
+        <div className="hero">
+          <h1 className="h1">アツメル</h1>
+          <p className="subtitle">出欠と集金を、これひとつで。</p>
+        </div>
 
-        <section className="card">
-          <h2 className="h2">使い方</h2>
-          <div className="list" style={{ marginTop: 10 }}>
-            <div className="item">1. 幹事がイベントを作成</div>
-            <div className="item">2. 参加URLを共有</div>
-            <div className="item">3. 管理ページで出欠と集金を確認</div>
+        <Link href="/event/new" className="btn btn-primary btn-full" style={{ height: 52 }}>
+          イベントを作成する
+        </Link>
+
+        <div className="card-flush">
+          <div className="list" style={{ border: "none" }}>
+            <div className="item">
+              <span style={{ fontWeight: 600 }}>1</span>
+              <span>幹事がイベントを作成</span>
+            </div>
+            <div className="item">
+              <span style={{ fontWeight: 600 }}>2</span>
+              <span>参加URLを共有</span>
+            </div>
+            <div className="item">
+              <span style={{ fontWeight: 600 }}>3</span>
+              <span>管理ページで出欠と集金を確認</span>
+            </div>
           </div>
-        </section>
+        </div>
+
+        <Link href="/dashboard" className="btn btn-ghost btn-full">
+          全体ダッシュボード
+        </Link>
       </div>
     </main>
   );
