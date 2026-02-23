@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string; responseId: string } }) {
@@ -11,7 +11,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: "不正なリクエストです。" }, { status: 400 });
+    return NextResponse.json({ error: "リクエスト形式が正しくありません。" }, { status: 400 });
   }
 
   const { data: responseRow, error: responseError } = await supabaseAdmin
@@ -26,7 +26,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   }
 
   if (responseRow.edit_token !== token) {
-    return NextResponse.json({ error: "本人確認に失敗しました。" }, { status: 403 });
+    return NextResponse.json({ error: "編集トークンが一致しません。" }, { status: 403 });
   }
 
   const updatePayload: Record<string, unknown> = {
@@ -51,7 +51,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     .single();
 
   if (error) {
-    return NextResponse.json({ error: "回答を更新できませんでした。" }, { status: 500 });
+    return NextResponse.json({ error: "回答の更新に失敗しました。" }, { status: 500 });
   }
 
   return NextResponse.json(data);

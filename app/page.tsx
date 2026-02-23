@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 
 export default function HomePage() {
   return (
@@ -12,14 +12,19 @@ export default function HomePage() {
               イベントを作成する
             </Link>
           </div>
+          <div style={{ marginTop: 8 }}>
+            <Link href="/dashboard" className="btn btn-ghost">
+              全体ダッシュボードを見る
+            </Link>
+          </div>
         </section>
 
         <section className="card">
           <h2 className="h2">使い方</h2>
           <div className="list" style={{ marginTop: 10 }}>
             <div className="item">1. 幹事がイベントを作成</div>
-            <div className="item">2. 参加者URLを共有</div>
-            <div className="item">3. 管理画面で集金済みを切替</div>
+            <div className="item">2. 参加URLを共有</div>
+            <div className="item">3. 管理ページで出欠と集金を確認</div>
           </div>
         </section>
       </div>

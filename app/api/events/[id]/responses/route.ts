@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 
 function randomToken() {
@@ -22,7 +22,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   }
 
   if (event.owner_token !== token) {
-    return NextResponse.json({ error: "管理者として認証できませんでした。" }, { status: 403 });
+    return NextResponse.json({ error: "管理トークンが一致しません。" }, { status: 403 });
   }
 
   const { data, error } = await supabaseAdmin
@@ -32,7 +32,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     .order("created_at", { ascending: true });
 
   if (error) {
-    return NextResponse.json({ error: "回答一覧を取得できませんでした。" }, { status: 500 });
+    return NextResponse.json({ error: "回答一覧の取得に失敗しました。" }, { status: 500 });
   }
 
   return NextResponse.json({ responses: data || [] });
@@ -43,7 +43,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: "不正なリクエストです。" }, { status: 400 });
+    return NextResponse.json({ error: "リクエスト形式が正しくありません。" }, { status: 400 });
   }
 
   const name = typeof body.name === "string" ? body.name.trim() : "";
@@ -54,7 +54,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   }
 
   if (rsvp !== "yes" && rsvp !== "maybe" && rsvp !== "no") {
-    return NextResponse.json({ error: "出欠の選択が不正です。" }, { status: 400 });
+    return NextResponse.json({ error: "出欠の選択が正しくありません。" }, { status: 400 });
   }
 
   const { data: eventExists } = await supabaseAdmin
@@ -81,7 +81,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     .single();
 
   if (error) {
-    return NextResponse.json({ error: "回答を保存できませんでした。" }, { status: 500 });
+    return NextResponse.json({ error: "回答の保存に失敗しました。" }, { status: 500 });
   }
 
   return NextResponse.json({ responseId: data.id, editToken: data.edit_token });

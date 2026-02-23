@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string; responseId: string } }) {
@@ -11,11 +11,11 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: "不正なリクエストです。" }, { status: 400 });
+    return NextResponse.json({ error: "リクエスト形式が正しくありません。" }, { status: 400 });
   }
 
   if (typeof body.paid !== "boolean") {
-    return NextResponse.json({ error: "支払い状態が不正です。" }, { status: 400 });
+    return NextResponse.json({ error: "paid は true/false で指定してください。" }, { status: 400 });
   }
 
   const { data: event, error: eventError } = await supabaseAdmin
@@ -29,7 +29,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   }
 
   if (event.owner_token !== token) {
-    return NextResponse.json({ error: "管理者として認証できませんでした。" }, { status: 403 });
+    return NextResponse.json({ error: "管理トークンが一致しません。" }, { status: 403 });
   }
 
   const { data, error } = await supabaseAdmin
@@ -45,7 +45,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     .single();
 
   if (error) {
-    return NextResponse.json({ error: "支払い状態を更新できませんでした。" }, { status: 500 });
+    return NextResponse.json({ error: "支払い状態の更新に失敗しました。" }, { status: 500 });
   }
 
   return NextResponse.json(data);

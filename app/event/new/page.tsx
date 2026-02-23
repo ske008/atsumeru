@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -14,9 +14,16 @@ type EventForm = {
 };
 
 const normalizeAmountInput = (value: string) =>
-  value
-    .replace(/[０-９]/g, (ch) => String.fromCharCode(ch.charCodeAt(0) - 0xfee0))
-    .replace(/[^\d]/g, "");
+  Array.from(value)
+    .map((ch) => {
+      const code = ch.charCodeAt(0);
+      if (code >= 0xff10 && code <= 0xff19) {
+        return String.fromCharCode(code - 0xfee0);
+      }
+      return ch;
+    })
+    .join("")
+    .replace(/\D/g, "");
 
 export default function NewEventPage() {
   const router = useRouter();
@@ -31,6 +38,7 @@ export default function NewEventPage() {
   });
   const [status, setStatus] = useState<{ kind: "error" | "info"; message: string } | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
   const normalizedAmount = form.amount ? Number(form.amount) : 0;
   const amountPreview = normalizedAmount.toLocaleString("ja-JP");
 
@@ -65,7 +73,7 @@ export default function NewEventPage() {
 
       const data = await res.json();
       if (!res.ok) {
-        setStatus({ kind: "error", message: data.error || "作成できませんでした。入力内容を確認してください。" });
+        setStatus({ kind: "error", message: data.error || "イベント作成に失敗しました。" });
         return;
       }
 
@@ -81,7 +89,7 @@ export default function NewEventPage() {
     <main className="container">
       <div className="card">
         <h1 className="h1">イベント作成</h1>
-        <p className="hint">作成後すぐ管理画面に移動します。出欠が0人でも先に集金設定できます。</p>
+        <p className="hint">作成後に管理ページへ移動します。</p>
 
         <div className="stack" style={{ marginTop: 12 }}>
           <input
@@ -134,6 +142,7 @@ export default function NewEventPage() {
             <p className="hint hint-inline">数字のみ入力（例: 3500）</p>
             <p className="amount-preview">1人あたり {amountPreview}円</p>
           </div>
+
           <input
             className="input"
             placeholder="送金URL（任意）"
@@ -141,12 +150,10 @@ export default function NewEventPage() {
             onChange={(e) => setForm({ ...form, payUrl: e.target.value })}
           />
 
-          {status && (
-            <p className={`status ${status.kind === "error" ? "status-error" : "status-info"}`}>{status.message}</p>
-          )}
+          {status && <p className={`status ${status.kind === "error" ? "status-error" : "status-info"}`}>{status.message}</p>}
 
           <button className="btn btn-primary" onClick={submit} disabled={submitting}>
-            {submitting ? "作成中..." : "作成して管理画面へ"}
+            {submitting ? "作成中..." : "作成して管理ページへ"}
           </button>
         </div>
       </div>

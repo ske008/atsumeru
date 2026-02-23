@@ -1,108 +1,67 @@
-# CLAUDE.md
+﻿# CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+このファイルは、このリポジトリで作業する AI/開発者向けの運用メモです。
 
-## プロジェクト概要
+## 目的
 
-**アツメル** — イベントの出欠確認と集金を一括管理するシングルページWebアプリ。ビルドプロセスなし、バックエンドなし。
+このプロジェクト（atsumeru）は、
+「出欠管理 + 集金確認」をシンプルに運用するための Web アプリです。
 
-## 開発・確認方法
+## 現在の構成（重要）
 
-```bash
-# ローカルサーバー起動（ポート8080）
-python3 -m http.server 8080
-```
+- フロントエンド: Next.js App Router
+- バックエンド: Next.js Route Handlers（`app/api`）
+- データベース: Supabase
 
-ブラウザで `http://localhost:8080/` を開く。ビルド不要。
+※ 「バックエンドなし」ではありません。`app/api` がバックエンドです。
 
-**Supabase設定**: Next/Vercel の環境変数を使用（`SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`）。`config.js` は使用しない。
+## 必須環境変数
 
-**デプロイ**: `main` を含む全ブランチへの push が GitHub Actions で自動的に GitHub Pages へデプロイされる（`.github/workflows/pages.yml`）。
+ローカル・Vercel ともに以下が必要です。
 
-## アーキテクチャ
+- `SUPABASE_URL`
+- `SUPABASE_SERVICE_ROLE_KEY`
 
-**構成**: Next.js App Router 構成（`app/` 配下）。`index.html` は使用しない。
+注意:
 
-- **React 18** (CDN/UMD) + **Babel standalone** でブラウザ内JSXトランスパイル
-- **Supabase** でデータ永続化（`events` / `members` テーブル）
-- **Supabase Realtime** で変更をリアルタイム検知（ポーリング不要）
-- ユーザー識別は `localStorage`（`atsumeru_user`）にメールを保存する簡易方式
+- `SUPABASE_SERVICE_ROLE_KEY` はサーバー専用。`NEXT_PUBLIC_` を付けない。
+- `.env.local` はコミットしない。
 
-### ルーティング
+## 主要ページ
 
-SPA内ルーティングは `App` の `page` / `pageArg` stateで管理。遷移は `go(page, arg)` を呼ぶだけ。
+- `/` ホーム
+- `/event/new` イベント作成
+- `/event/[eventId]` 参加者ページ（回答用）
+- `/event/[eventId]/manage?token=...` 管理ページ
+- `/dashboard` 全体ダッシュボード（出席/支払い集計）
 
-```js
-go("manage", ev.id)   // pageArg にイベントIDを渡す
-go("home")            // argなし
-```
+## API
 
-`App.useEffect` 起動時に `?event=<id>` URLパラメータを検出し、自動で `participant` ページに遷移する。
+- `POST /api/events` イベント作成
+- `GET /api/events/[id]` イベント取得
+- `PATCH /api/events/[id]/manage?token=...` 集金設定更新
+- `GET /api/events/[id]/responses?token=...` 回答一覧取得（管理）
+- `POST /api/events/[id]/responses` 回答登録（参加者）
+- `PATCH /api/events/[id]/responses/[responseId]?edit=...` 参加者側更新
+- `PATCH /api/events/[id]/responses/[responseId]/paid?token=...` 管理側の支払い更新
 
-### データモデル（Supabase）
+## スキーマ
 
-```sql
--- events テーブル
-id TEXT PRIMARY KEY
-title TEXT NOT NULL
-date TEXT
-place TEXT
-note TEXT
-created_by TEXT NOT NULL
-created_at TEXT NOT NULL
-collecting BOOLEAN DEFAULT FALSE
-amount INTEGER DEFAULT 0
-pay_url TEXT DEFAULT ''
+基準は `docs/schema.sql`。
 
--- members テーブル
-id TEXT PRIMARY KEY
-event_id TEXT NOT NULL REFERENCES events(id)
-name TEXT NOT NULL
-rsvp TEXT ('yes'|'no'|'maybe')
-paid BOOLEAN DEFAULT FALSE
-paid_at TEXT
-```
+主要テーブル:
 
-### コンポーネント構成
+- `events`
+- `responses`
 
-| コンポーネント | 役割 |
-|---|---|
-| `App` | ルートコンポーネント。`page` stateで画面を切り替え |
-| `Nav` | 共通ヘッダー（参加者ページでは非表示） |
-| `Home` | ランディング |
-| `Login` | メール入力のみ（認証なし） |
-| `Create` | イベント作成フォーム |
-| `EventList` | 主催イベント一覧 |
-| `Manage` | 幹事管理画面。`tab` state = `"rsvp"` \| `"collect"` |
-| `ParticipantPage` | 参加者向け公開ページ（`?event=<id>`） |
-| `Field` | ラベル・ヒント付きフォームフィールドの共通ラッパー |
-| `MemberRow` | 出欠タブのメンバー1行（削除ボタン付き） |
+## 作業ルール（このリポジトリ）
 
-### DB操作パターン
+- 変更後は `npm run build` で動作確認する。
+- ユーザー向け文言は日本語で統一する。
+- 文字コードは UTF-8 を維持する。
+- 既存仕様を壊す変更は、先に意図を明記してから行う。
 
-`db` オブジェクト経由でSupabaseを操作する（直接 `supabase.from()` しない）：
+## 現在の運用優先事項
 
-```js
-await db.getEvents(user)          // イベント一覧取得
-await db.getEvent(id)             // 単一イベント取得
-await db.createEvent(ev)          // イベント作成
-await db.updateEvent(id, fields)  // イベント更新
-await db.getMembers(eventId)      // メンバー一覧取得
-await db.upsertMember(eventId, name, rsvp)  // メンバー追加/更新
-await db.removeMember(memberId)   // メンバー削除
-await db.setPaid(memberId, paid)  // 支払い状態更新
-```
-
-### 参加者ページのステートマシン
-
-```
-rsvp → rsvp_done → paying → confirm → done
-                 ↘ confirm（payUrl未設定時）→ done
-```
-
-## コーディング規則
-
-- デザイントークンは `C` オブジェクト（色・フォント・radius）、共通スタイルは `S` オブジェクト（インラインスタイル）
-- 新しい画面はすべて `App` の条件分岐（`page === "xxx"` の羅列）に追加し、`go()` で遷移する
-- DB操作は `db` オブジェクト経由で行う
-- ユーザー管理は `localUser.get/set` を使用
+- 「簡単に・シンプルに・確実に動く」ことを最優先にする。
+- まず壊れない最小機能を守り、装飾や拡張は後回しにする。
