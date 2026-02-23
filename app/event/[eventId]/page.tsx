@@ -176,6 +176,23 @@ export default function ParticipantPage() {
   };
 
 
+  const togglePaid = async (row: ResponseRow) => {
+    try {
+      const res = await fetch(
+        `/api/events/${params.eventId}/responses/${row.id}?edit=${row.edit_token}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ paid: !row.paid }),
+        }
+      );
+      if (!res.ok) return;
+      setResponses((prev) =>
+        prev.map((r) => (r.id === row.id ? { ...r, paid: !row.paid } : r))
+      );
+    } catch {}
+  };
+
   if (loading) {
     return <main className="container"><div className="card hero"><p className="hint">読み込み中...</p></div></main>;
   }
@@ -201,6 +218,19 @@ export default function ParticipantPage() {
             <div style={{ marginTop: 12 }}>
               <span className="badge badge-accent">&yen;{event.amount.toLocaleString()} / 人</span>
             </div>
+          )}
+          {event.collecting && event.pay_url && (
+            <p style={{ marginTop: 8, fontSize: 14, color: "var(--muted)" }}>
+              支払い方法：
+              <a
+                href={ensureAbsoluteUrl(event.pay_url)}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: "#3366cc" }}
+              >
+                {event.pay_url}
+              </a>
+            </p>
           )}
         </div>
 
@@ -296,15 +326,20 @@ export default function ParticipantPage() {
                       <div key={row.id} className="item">
                         <span style={{ fontWeight: 500, fontSize: "0.9375rem" }}>{row.name}</span>
                         {event.collecting && (
-                          <span style={{
-                            fontSize: "0.75rem",
-                            padding: "2px 8px",
-                            borderRadius: 4,
-                            background: row.paid ? "var(--success, #16a34a)" : "var(--border)",
-                            color: row.paid ? "#fff" : "var(--muted)",
-                          }}>
+                          <button
+                            onClick={() => togglePaid(row)}
+                            style={{
+                              fontSize: "0.75rem",
+                              padding: "2px 8px",
+                              borderRadius: 4,
+                              border: "none",
+                              cursor: "pointer",
+                              background: row.paid ? "var(--success, #16a34a)" : "var(--border)",
+                              color: row.paid ? "#fff" : "var(--muted)",
+                            }}
+                          >
                             {row.paid ? "支払い済み" : "未払い"}
-                          </span>
+                          </button>
                         )}
                       </div>
                     ))}
