@@ -13,6 +13,7 @@ type EventForm = {
   splitMode: boolean;
   amount: string;
   totalAmount: string;
+  splitCount: string;
   payUrl: string;
 };
 
@@ -39,6 +40,7 @@ export default function NewEventPage() {
     splitMode: false,
     amount: "",
     totalAmount: "",
+    splitCount: "",
     payUrl: "",
   });
   const [status, setStatus] = useState<{ kind: "error" | "info"; message: string } | null>(null);
@@ -46,6 +48,7 @@ export default function NewEventPage() {
 
   const normalizedAmount = form.amount ? Number(form.amount) : 0;
   const normalizedTotalAmount = form.totalAmount ? Number(form.totalAmount) : 0;
+  const normalizedSplitCount = form.splitCount ? Number(form.splitCount) : 0;
   const amountPreview = normalizedAmount.toLocaleString("ja-JP");
   const totalAmountPreview = normalizedTotalAmount.toLocaleString("ja-JP");
 
@@ -79,6 +82,7 @@ export default function NewEventPage() {
           collecting: form.collecting,
           amount: form.splitMode ? 0 : Number(form.amount || 0),
           total_amount: form.splitMode ? Number(form.totalAmount || 0) : 0,
+          split_count: form.splitMode ? Number(form.splitCount || 0) : 0,
           pay_url: form.payUrl.trim() || null,
         }),
       });
@@ -203,7 +207,23 @@ export default function NewEventPage() {
                           />
                           <span className="money-suffix">円</span>
                         </div>
-                        {normalizedTotalAmount > 0 && (
+                        <div className="money-input-wrap">
+                          <input
+                            className="input"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
+                            placeholder="人数（任意・未入力で参加者数に合わせて自動計算）"
+                            value={form.splitCount}
+                            onChange={(e) => setForm({ ...form, splitCount: normalizeAmountInput(e.target.value) })}
+                          />
+                          <span className="money-suffix">人</span>
+                        </div>
+                        {normalizedTotalAmount > 0 && normalizedSplitCount > 0 && (
+                          <p className="amount-preview">
+                            {totalAmountPreview}円 ÷ {normalizedSplitCount}人 = {Math.ceil(normalizedTotalAmount / normalizedSplitCount).toLocaleString("ja-JP")}円/人
+                          </p>
+                        )}
+                        {normalizedTotalAmount > 0 && normalizedSplitCount === 0 && (
                           <p className="amount-preview">合計 {totalAmountPreview}円 ÷ 参加人数で自動計算</p>
                         )}
                       </>

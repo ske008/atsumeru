@@ -13,6 +13,7 @@ type EventRow = {
   collecting: boolean;
   amount: number;
   total_amount: number;
+  split_count: number;
   pay_url: string | null;
 };
 
@@ -69,15 +70,18 @@ export default function ManagePage() {
 
   const [event, setEvent] = useState<EventRow | null>(null);
   const [responses, setResponses] = useState<ResponseRow[]>([]);
-  const [form, setForm] = useState({ collecting: false, splitMode: false, amount: "", totalAmount: "", payUrl: "" });
+  const [form, setForm] = useState({ collecting: false, splitMode: false, amount: "", totalAmount: "", splitCount: "", payUrl: "" });
   const [status, setStatus] = useState<UiStatus | null>(null);
   const [savingSetting, setSavingSetting] = useState(false);
 
   const normalizedAmount = form.amount ? Number(form.amount) : 0;
   const normalizedTotalAmount = form.totalAmount ? Number(form.totalAmount) : 0;
+  const normalizedSplitCount = form.splitCount ? Number(form.splitCount) : 0;
   const amountPreview = normalizedAmount.toLocaleString("ja-JP");
   const totalAmountPreview = normalizedTotalAmount.toLocaleString("ja-JP");
   const yesResponses = responses.filter((row) => row.rsvp === "yes");
+  // 割り勘の実効人数: 人数指定があればそちらを優先、なければ参加者数
+  const effectiveSplitCount = normalizedSplitCount > 0 ? normalizedSplitCount : yesResponses.length;
   const paidResponses = yesResponses.filter((row) => row.paid);
   const paidRatio = yesResponses.length > 0 ? (paidResponses.length / yesResponses.length) * 100 : 0;
 
@@ -102,6 +106,7 @@ export default function ManagePage() {
         splitMode: isSplit,
         amount: isSplit ? "" : String(eventData.amount ?? 0),
         totalAmount: isSplit ? String(eventData.total_amount ?? 0) : "",
+        splitCount: isSplit && (eventData.split_count ?? 0) > 0 ? String(eventData.split_count) : "",
         payUrl: eventData.pay_url || "",
       });
 
@@ -164,6 +169,7 @@ export default function ManagePage() {
           collecting: form.collecting,
           amount: form.splitMode ? 0 : Number(form.amount || 0),
           total_amount: form.splitMode ? Number(form.totalAmount || 0) : 0,
+          split_count: form.splitMode ? Number(form.splitCount || 0) : 0,
           pay_url: form.payUrl.trim() || null,
         }),
       });
@@ -175,7 +181,7 @@ export default function ManagePage() {
       }
 
       setEvent((prev) =>
-        prev ? { ...prev, collecting: data.collecting, amount: data.amount, total_amount: data.total_amount, pay_url: data.pay_url } : prev
+        prev ? { ...prev, collecting: data.collecting, amount: data.amount, total_amount: data.total_amount, split_count: data.split_count, pay_url: data.pay_url } : prev
       );
       setStatus({ kind: "success", message: "設定を更新しました。" });
     } catch {
@@ -310,13 +316,25 @@ export default function ManagePage() {
                         />
                         <span className="money-suffix">円</span>
                       </div>
-                      {normalizedTotalAmount > 0 && yesResponses.length > 0 && (
+                      <div className="money-input-wrap">
+                        <input
+                          className="input"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
+                          placeholder={`人数（未入力: 参加者数 ${yesResponses.length}人 で自動計算）`}
+                          value={form.splitCount}
+                          onChange={(e) => setForm((prev) => ({ ...prev, splitCount: normalizeAmountInput(e.target.value) }))}
+                        />
+                        <span className="money-suffix">人</span>
+                      </div>
+                      {normalizedTotalAmount > 0 && effectiveSplitCount > 0 && (
                         <p className="amount-preview">
-                          {totalAmountPreview}円 ÷ {yesResponses.length}人 = {Math.ceil(normalizedTotalAmount / yesResponses.length).toLocaleString("ja-JP")}円/人
+                          {totalAmountPreview}円 ÷ {effectiveSplitCount}人 = {Math.ceil(normalizedTotalAmount / effectiveSplitCount).toLocaleString("ja-JP")}円/人
+                          {normalizedSplitCount === 0 && <span style={{ fontSize: "0.75rem", color: "var(--muted)", marginLeft: 4 }}>（参加者数で計算中）</span>}
                         </p>
                       )}
-                      {normalizedTotalAmount > 0 && yesResponses.length === 0 && (
-                        <p className="amount-preview">合計 {totalAmountPreview}円 ÷ 参加人数で自動計算</p>
+                      {normalizedTotalAmount > 0 && effectiveSplitCount === 0 && (
+                        <p className="amount-preview">合計 {totalAmountPreview}円 ÷ 人数で計算</p>
                       )}
                     </>
                   )}
@@ -348,7 +366,10 @@ export default function ManagePage() {
             </div>
             {event && event.total_amount > 0 && (
               <p style={{ marginTop: 4, fontSize: "0.875rem", color: "var(--muted)" }}>
-                合計 {event.total_amount.toLocaleString("ja-JP")}円 ÷ {yesResponses.length}人 = 1人あたり {Math.ceil(event.total_amount / yesResponses.length).toLocaleString("ja-JP")}円
+                {(() => {
+                  const count = (event.split_count > 0 ? event.split_count : yesResponses.length);
+                  return `合計 ${event.total_amount.toLocaleString("ja-JP")}円 ÷ ${count}人 = 1人あたり ${Math.ceil(event.total_amount / count).toLocaleString("ja-JP")}円`;
+                })()}
               </p>
             )}
             <div className="progress-bar">

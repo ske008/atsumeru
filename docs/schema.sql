@@ -12,6 +12,7 @@ create table if not exists public.events (
   collecting boolean not null default false,
   amount integer not null default 0,
   total_amount integer not null default 0,
+  split_count integer not null default 0,
   pay_url text null,
   owner_token text not null unique,
   created_at timestamptz not null default now()
