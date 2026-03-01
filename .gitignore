@@ -2,3 +2,4 @@ preview.html
 node_modules/
 .next/
 .env.local
+*.tsbuildinfo
