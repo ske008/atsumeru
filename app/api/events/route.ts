@@ -22,6 +22,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "金額は0以上の数字で入力してください。" }, { status: 400 });
     }
 
+    const totalAmount = Number(body.total_amount ?? 0);
+    if (Number.isNaN(totalAmount) || totalAmount < 0) {
+      return NextResponse.json({ error: "合計金額は0以上の数字で入力してください。" }, { status: 400 });
+    }
+
     const ownerToken = randomToken();
     const { data, error } = await supabaseAdmin
       .from("events")
@@ -32,6 +37,7 @@ export async function POST(req: NextRequest) {
         note: typeof body.note === "string" && body.note.trim() ? body.note.trim() : null,
         collecting: !!body.collecting,
         amount,
+        total_amount: totalAmount,
         pay_url: typeof body.pay_url === "string" && body.pay_url.trim() ? body.pay_url.trim() : null,
         owner_token: ownerToken,
       })

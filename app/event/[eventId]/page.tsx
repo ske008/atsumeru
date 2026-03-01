@@ -11,6 +11,7 @@ type EventRow = {
   note: string | null;
   collecting: boolean;
   amount: number;
+  total_amount: number;
   pay_url: string | null;
 };
 
@@ -72,6 +73,15 @@ export default function ParticipantPage() {
   const yesRows = useMemo(() => responses.filter((r) => r.rsvp === "yes"), [responses]);
   const maybeRows = useMemo(() => responses.filter((r) => r.rsvp === "maybe"), [responses]);
   const noRows = useMemo(() => responses.filter((r) => r.rsvp === "no"), [responses]);
+
+  // 割り勘モード: total_amount を参加人数で等分
+  const displayAmount = useMemo(() => {
+    if (!event) return 0;
+    if (event.total_amount > 0 && yesRows.length > 0) {
+      return Math.ceil(event.total_amount / yesRows.length);
+    }
+    return event.amount;
+  }, [event, yesRows.length]);
 
   const fetchResponses = async () => {
     try {
@@ -252,10 +262,24 @@ export default function ParticipantPage() {
             {event.place && <span>{event.place}</span>}
           </div>
           {event.note && <p className="hint">{event.note}</p>}
-          {event.collecting && event.amount > 0 && (
-            <p style={{ marginTop: 12, fontSize: "1.1rem", fontWeight: 600 }}>
-              支払い金額：&yen;{event.amount.toLocaleString()}
-            </p>
+          {event.collecting && (event.amount > 0 || event.total_amount > 0) && (
+            <div style={{ marginTop: 12 }}>
+              {event.total_amount > 0 ? (
+                <>
+                  <p style={{ fontSize: "1.1rem", fontWeight: 600 }}>
+                    支払い金額：&yen;{displayAmount.toLocaleString()}
+                    {yesRows.length > 0 && <span style={{ fontSize: "0.8rem", fontWeight: 400, color: "var(--muted)", marginLeft: 6 }}>（合計 {event.total_amount.toLocaleString()}円 ÷ {yesRows.length}人）</span>}
+                  </p>
+                  {yesRows.length === 0 && (
+                    <p style={{ fontSize: "0.875rem", color: "var(--muted)" }}>合計 {event.total_amount.toLocaleString()}円 ÷ 参加人数で自動計算</p>
+                  )}
+                </>
+              ) : (
+                <p style={{ fontSize: "1.1rem", fontWeight: 600 }}>
+                  支払い金額：&yen;{event.amount.toLocaleString()}
+                </p>
+              )}
+            </div>
           )}
         </div>
 
@@ -263,8 +287,8 @@ export default function ParticipantPage() {
         {justSubmitted && (
           <div className="card">
             <h2 className="h2">{justSubmitted.name} さん、お支払いにお進みください</h2>
-            {event.amount > 0 && (
-              <p className="hint" style={{ marginTop: 4 }}>&yen;{event.amount.toLocaleString()}</p>
+            {displayAmount > 0 && (
+              <p className="hint" style={{ marginTop: 4 }}>&yen;{displayAmount.toLocaleString()}</p>
             )}
             {event.pay_url ? (
               <>

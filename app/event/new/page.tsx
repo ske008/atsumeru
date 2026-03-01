@@ -10,7 +10,9 @@ type EventForm = {
   place: string;
   note: string;
   collecting: boolean;
+  splitMode: boolean;
   amount: string;
+  totalAmount: string;
   payUrl: string;
 };
 
@@ -34,14 +36,18 @@ export default function NewEventPage() {
     place: "",
     note: "",
     collecting: true,
+    splitMode: false,
     amount: "",
+    totalAmount: "",
     payUrl: "",
   });
   const [status, setStatus] = useState<{ kind: "error" | "info"; message: string } | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   const normalizedAmount = form.amount ? Number(form.amount) : 0;
+  const normalizedTotalAmount = form.totalAmount ? Number(form.totalAmount) : 0;
   const amountPreview = normalizedAmount.toLocaleString("ja-JP");
+  const totalAmountPreview = normalizedTotalAmount.toLocaleString("ja-JP");
 
   const submit = async () => {
     setStatus(null);
@@ -51,8 +57,12 @@ export default function NewEventPage() {
       return;
     }
 
-    if (form.amount && Number.isNaN(Number(form.amount))) {
+    if (!form.splitMode && form.amount && Number.isNaN(Number(form.amount))) {
       setStatus({ kind: "error", message: "金額は数字で入力してください。" });
+      return;
+    }
+    if (form.splitMode && form.totalAmount && Number.isNaN(Number(form.totalAmount))) {
+      setStatus({ kind: "error", message: "合計金額は数字で入力してください。" });
       return;
     }
 
@@ -67,7 +77,8 @@ export default function NewEventPage() {
           place: form.place.trim() || null,
           note: form.note.trim() || null,
           collecting: form.collecting,
-          amount: Number(form.amount || 0),
+          amount: form.splitMode ? 0 : Number(form.amount || 0),
+          total_amount: form.splitMode ? Number(form.totalAmount || 0) : 0,
           pay_url: form.payUrl.trim() || null,
         }),
       });
@@ -141,20 +152,63 @@ export default function NewEventPage() {
                 <div className="collect-panel">
                   <div className="stack-sm">
                     <p className="section-label">集金設定</p>
-                    <div className="money-input-wrap">
-                      <input
-                        className="input"
-                        inputMode="numeric"
-                        pattern="[0-9]*"
-                        placeholder="金額"
-                        value={form.amount}
-                        onChange={(e) => setForm({ ...form, amount: normalizeAmountInput(e.target.value) })}
-                      />
-                      <span className="money-suffix">円</span>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <label style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", flex: 1, padding: "8px 12px", border: `2px solid ${!form.splitMode ? "var(--primary, #2563eb)" : "var(--border)"}`, borderRadius: 8 }}>
+                        <input
+                          type="radio"
+                          name="splitMode"
+                          checked={!form.splitMode}
+                          onChange={() => setForm({ ...form, splitMode: false })}
+                        />
+                        <span style={{ fontSize: "0.875rem" }}>1人あたり</span>
+                      </label>
+                      <label style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", flex: 1, padding: "8px 12px", border: `2px solid ${form.splitMode ? "var(--primary, #2563eb)" : "var(--border)"}`, borderRadius: 8 }}>
+                        <input
+                          type="radio"
+                          name="splitMode"
+                          checked={form.splitMode}
+                          onChange={() => setForm({ ...form, splitMode: true })}
+                        />
+                        <span style={{ fontSize: "0.875rem" }}>割り勘</span>
+                      </label>
                     </div>
-                    {normalizedAmount > 0 && (
-                      <p className="amount-preview">1人あたり {amountPreview}円</p>
+
+                    {!form.splitMode ? (
+                      <>
+                        <div className="money-input-wrap">
+                          <input
+                            className="input"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
+                            placeholder="1人あたりの金額"
+                            value={form.amount}
+                            onChange={(e) => setForm({ ...form, amount: normalizeAmountInput(e.target.value) })}
+                          />
+                          <span className="money-suffix">円</span>
+                        </div>
+                        {normalizedAmount > 0 && (
+                          <p className="amount-preview">1人あたり {amountPreview}円</p>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        <div className="money-input-wrap">
+                          <input
+                            className="input"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
+                            placeholder="合計金額"
+                            value={form.totalAmount}
+                            onChange={(e) => setForm({ ...form, totalAmount: normalizeAmountInput(e.target.value) })}
+                          />
+                          <span className="money-suffix">円</span>
+                        </div>
+                        {normalizedTotalAmount > 0 && (
+                          <p className="amount-preview">合計 {totalAmountPreview}円 ÷ 参加人数で自動計算</p>
+                        )}
+                      </>
                     )}
+
                     <input
                       className="input"
                       placeholder="送金URL（PayPay等・任意）"
