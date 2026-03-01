@@ -257,19 +257,6 @@ export default function ParticipantPage() {
               支払い金額：&yen;{event.amount.toLocaleString()}
             </p>
           )}
-          {event.collecting && event.pay_url && (
-            <p style={{ marginTop: 8, fontSize: 14, color: "var(--muted)" }}>
-              支払い先：
-              <a
-                href={ensureAbsoluteUrl(event.pay_url)}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ color: "#3366cc" }}
-              >
-                {event.pay_url}
-              </a>
-            </p>
-          )}
         </div>
 
         {/* 支払い選択（参加登録直後に表示） */}
@@ -278,24 +265,6 @@ export default function ParticipantPage() {
             <h2 className="h2">{justSubmitted.name} さん、お支払いにお進みください</h2>
             {event.amount > 0 && (
               <p className="hint" style={{ marginTop: 4 }}>&yen;{event.amount.toLocaleString()}</p>
-            )}
-            {event.pay_url && (
-              <p style={{ marginTop: 8, fontSize: 14, color: "var(--muted)" }}>
-                支払い先：
-                <a
-                  href={ensureAbsoluteUrl(event.pay_url)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{ color: "#3366cc" }}
-                >
-                  {event.pay_url}
-                </a>
-              </p>
-            )}
-            {event.pay_url && (
-              <p style={{ marginTop: 4, fontSize: 13, color: "var(--muted)" }}>
-                支払いが完了したら、支払い完了を押してください
-              </p>
             )}
             {event.pay_url ? (
               <>
@@ -340,19 +309,6 @@ export default function ParticipantPage() {
                 onChange={(e) => setName(e.target.value)}
               />
               {notice && <p className="status status-info">{notice}</p>}
-              {notice && event.collecting && event.pay_url && (
-                <p style={{ fontSize: 14, color: "var(--muted)" }}>
-                  支払い先：
-                  <a
-                    href={ensureAbsoluteUrl(event.pay_url)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{ color: "#3366cc" }}
-                  >
-                    {event.pay_url}
-                  </a>
-                </p>
-              )}
               {error && <p className="status status-error">{error}</p>}
               <div className="grid3">
                 <button className="btn btn-primary" onClick={() => submitRsvp("yes")} disabled={submitting}>
