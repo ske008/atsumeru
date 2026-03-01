@@ -300,8 +300,8 @@ export default function ParticipantPage() {
             {event.pay_url ? (
               <>
                 <div style={{ marginTop: 12 }}>
-                  <button className="btn btn-primary btn-full" onClick={markPaid}>
-                    支払い完了
+                  <button className="btn btn-primary btn-full" onClick={() => { window.open(ensureAbsoluteUrl(event.pay_url!), "_blank", "noopener,noreferrer"); markPaid(); }}>
+                    支払う
                   </button>
                 </div>
                 <div style={{ marginTop: 12 }}>
