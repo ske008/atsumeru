@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 export async function GET(_: NextRequest, { params }: { params: { id: string } }) {
   const { data, error } = await supabaseAdmin
     .from("events")
-    .select("id,title,date,place,note,collecting,amount,pay_url,created_at")
+    .select("id,title,date,place,note,collecting,amount,total_amount,pay_url,created_at")
     .eq("id", params.id)
     .single();
 
