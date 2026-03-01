@@ -12,6 +12,7 @@ type EventRow = {
   collecting: boolean;
   amount: number;
   total_amount: number;
+  split_count: number;
   pay_url: string | null;
 };
 
@@ -74,11 +75,12 @@ export default function ParticipantPage() {
   const maybeRows = useMemo(() => responses.filter((r) => r.rsvp === "maybe"), [responses]);
   const noRows = useMemo(() => responses.filter((r) => r.rsvp === "no"), [responses]);
 
-  // 割り勘モード: total_amount を参加人数で等分
+  // 割り勘モード: split_count が設定されていればその人数、なければ参加者数で等分
   const displayAmount = useMemo(() => {
     if (!event) return 0;
-    if (event.total_amount > 0 && yesRows.length > 0) {
-      return Math.ceil(event.total_amount / yesRows.length);
+    if (event.total_amount > 0) {
+      const count = event.split_count > 0 ? event.split_count : yesRows.length;
+      if (count > 0) return Math.ceil(event.total_amount / count);
     }
     return event.amount;
   }, [event, yesRows.length]);
@@ -266,13 +268,19 @@ export default function ParticipantPage() {
             <div style={{ marginTop: 12 }}>
               {event.total_amount > 0 ? (
                 <>
-                  <p style={{ fontSize: "1.1rem", fontWeight: 600 }}>
-                    支払い金額：&yen;{displayAmount.toLocaleString()}
-                    {yesRows.length > 0 && <span style={{ fontSize: "0.8rem", fontWeight: 400, color: "var(--muted)", marginLeft: 6 }}>（合計 {event.total_amount.toLocaleString()}円 ÷ {yesRows.length}人）</span>}
-                  </p>
-                  {yesRows.length === 0 && (
-                    <p style={{ fontSize: "0.875rem", color: "var(--muted)" }}>合計 {event.total_amount.toLocaleString()}円 ÷ 参加人数で自動計算</p>
-                  )}
+                  {(() => {
+                    const count = event.split_count > 0 ? event.split_count : yesRows.length;
+                    return count > 0 ? (
+                      <p style={{ fontSize: "1.1rem", fontWeight: 600 }}>
+                        支払い金額：&yen;{displayAmount.toLocaleString()}
+                        <span style={{ fontSize: "0.8rem", fontWeight: 400, color: "var(--muted)", marginLeft: 6 }}>
+                          （合計 {event.total_amount.toLocaleString()}円 ÷ {count}人）
+                        </span>
+                      </p>
+                    ) : (
+                      <p style={{ fontSize: "0.875rem", color: "var(--muted)" }}>合計 {event.total_amount.toLocaleString()}円 ÷ 参加人数で自動計算</p>
+                    );
+                  })()}
                 </>
               ) : (
                 <p style={{ fontSize: "1.1rem", fontWeight: 600 }}>

@@ -26,6 +26,11 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     return NextResponse.json({ error: "合計金額は0以上の数字で入力してください。" }, { status: 400 });
   }
 
+  const splitCount = Number(body.split_count ?? 0);
+  if (Number.isNaN(splitCount) || splitCount < 0) {
+    return NextResponse.json({ error: "人数は0以上の数字で入力してください。" }, { status: 400 });
+  }
+
   const { data: event, error: eventError } = await supabaseAdmin
     .from("events")
     .select("id,owner_token")
@@ -46,10 +51,11 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       collecting: !!body.collecting,
       amount,
       total_amount: totalAmount,
+      split_count: splitCount,
       pay_url: typeof body.pay_url === "string" && body.pay_url.trim() ? body.pay_url.trim() : null,
     })
     .eq("id", params.id)
-    .select("id,collecting,amount,total_amount,pay_url")
+    .select("id,collecting,amount,total_amount,split_count,pay_url")
     .single();
 
   if (error) {

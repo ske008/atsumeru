@@ -27,6 +27,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "合計金額は0以上の数字で入力してください。" }, { status: 400 });
     }
 
+    const splitCount = Number(body.split_count ?? 0);
+    if (Number.isNaN(splitCount) || splitCount < 0) {
+      return NextResponse.json({ error: "人数は0以上の数字で入力してください。" }, { status: 400 });
+    }
+
     const ownerToken = randomToken();
     const { data, error } = await supabaseAdmin
       .from("events")
@@ -38,6 +43,7 @@ export async function POST(req: NextRequest) {
         collecting: !!body.collecting,
         amount,
         total_amount: totalAmount,
+        split_count: splitCount,
         pay_url: typeof body.pay_url === "string" && body.pay_url.trim() ? body.pay_url.trim() : null,
         owner_token: ownerToken,
       })
