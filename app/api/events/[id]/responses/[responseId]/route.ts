@@ -4,9 +4,11 @@ import { supabaseAdmin } from "@/lib/supabase";
 export const dynamic = "force-dynamic";
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string; responseId: string } }) {
-  const token = req.nextUrl.searchParams.get("edit");
-  if (!token) {
-    return NextResponse.json({ error: "編集トークンが必要です。" }, { status: 401 });
+  const editToken = req.nextUrl.searchParams.get("edit");
+  const ownerToken = req.nextUrl.searchParams.get("token");
+
+  if (!editToken && !ownerToken) {
+    return NextResponse.json({ error: "トークンが必要です。" }, { status: 401 });
   }
 
   let body: Record<string, unknown>;
@@ -16,19 +18,21 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     return NextResponse.json({ error: "リクエスト形式が正しくありません。" }, { status: 400 });
   }
 
-  const { data: responseRow, error: responseError } = await supabaseAdmin
-    .from("responses")
-    .select("id,edit_token")
-    .eq("id", params.responseId)
-    .eq("event_id", params.id)
-    .single();
+  // イベントと回答を同時にチェック
+  const [eventRes, responseRes] = await Promise.all([
+    supabaseAdmin.from("events").select("owner_token").eq("id", params.id).single(),
+    supabaseAdmin.from("responses").select("id,edit_token").eq("id", params.responseId).eq("event_id", params.id).single(),
+  ]);
 
-  if (responseError || !responseRow) {
+  if (responseRes.error || !responseRes.data) {
     return NextResponse.json({ error: "回答データが見つかりません。" }, { status: 404 });
   }
 
-  if (responseRow.edit_token !== token) {
-    return NextResponse.json({ error: "編集トークンが一致しません。" }, { status: 403 });
+  const isOwner = ownerToken && eventRes.data?.owner_token === ownerToken;
+  const isParticipant = editToken && responseRes.data?.edit_token === editToken;
+
+  if (!isOwner && !isParticipant) {
+    return NextResponse.json({ error: "権限がありません。" }, { status: 403 });
   }
 
   const updatePayload: Record<string, unknown> = {

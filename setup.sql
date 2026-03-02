@@ -11,6 +11,8 @@ CREATE TABLE events (
   created_at TEXT NOT NULL,
   collecting BOOLEAN DEFAULT FALSE,
   amount INTEGER DEFAULT 0,
+  total_amount INTEGER DEFAULT 0,
+  split_count INTEGER DEFAULT 0,
   pay_url TEXT DEFAULT ''
 );
 

@@ -482,7 +482,11 @@ export default function ManagePage() {
                             className="input input-sm"
                             placeholder="自動"
                             value={row.amount === null ? "" : String(row.amount)}
-                            onChange={(e) => updateIndividualAmount(row.id, e.target.value === "" ? null : Number(normalizeAmountInput(e.target.value)))}
+                            onChange={(e) => {
+                              const val = e.target.value === "" ? null : Number(normalizeAmountInput(e.target.value));
+                              setResponses((prev) => prev.map((item) => (item.id === row.id ? { ...item, amount: val } : item)));
+                            }}
+                            onBlur={(e) => updateIndividualAmount(row.id, e.target.value === "" ? null : Number(normalizeAmountInput(e.target.value)))}
                             style={{ textAlign: "right", paddingRight: 24 }}
                           />
                           <span className="money-suffix" style={{ fontSize: "0.75rem" }}>円</span>

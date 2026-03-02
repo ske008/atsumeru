@@ -1,68 +1,31 @@
-﻿# HANDOVER / 日次報告（2026-03-02）
+﻿# 引き継ぎ資料 (2026-03-02 23:59)
 
-## 1. 今日やったこと（要約）
-- GitHubのリモートリポジトリ（master）から最新の変更をプル。
-- `docs/schema.sql` のローカル変更（キャッシュレス支払いURL遷移関連）とリモートの変更をマージ。
-- 共通の `Knowledge/thought.md` に基づき、グローバルな運用ルールを適用開始。
+## 1. 取り組みと完了事項
+- [x] **金額傾斜機能の実装**: 参加者ごとに異なる支払い金額を設定できる機能をフロントエンド・バックエンド共に実装しました。
+- [x] **DBスキーマ更新**: `responses` テーブルに `amount` カラム、`events` テーブルに `total_amount` と `split_count` を追加しました。
+- [x] **管理画面 UI 実装**: 各参加者の金額を直接編集できる入力欄と、複数人を選択して一括で金額を設定できるバーを実装しました。
+- [x] **参加者画面 UI 実装**: 自分に設定された金額がヘッダーや支払いボタンに表示されるようにしました。
+- [x] **保存バグの修正**: 主催者が管理画面から回答を更新する際、認証エラー（403）で保存できなかった問題を修正しました。
+- [x] **保存タイミングの安定化**: 通信の競合を防ぐため、1文字ごとの保存からフォーカスが外れたタイミングでの保存に変更しました。
 
-## 2. 反映済み主な変更
-- 更新
-  - `docs/schema.sql`: リモートの最新定義をマージ
-  - `HANDOVER.md`: 本日の作業内容を追記
+## 2. 成功点と課題（バグ修正含む）
+- **成功点**: シンプルなUIを維持しつつ、一括設定と個別設定を両立させることができました。
+- **課題と修正**: 最初、APIが参加者のトークン（edit_token）しか受け付けていなかったため、主催者（owner_token）でも変更できるように権限ロジックを修正しました。
 
-## 3. 次回の作業
-- 最新のスキーマ定義に基づいた機能開発の継続。
-- グローバルルール（日本語対応、スキル活用）の定着確認。
+## 3. 主要な意思決定とその理由
+- **設計**: モードを完全に分けるのではなく、個別金額が設定されていればそれを優先し、なければイベント全体の計算結果を出すという「フォールバック」形式にしました。これにより、既存の動作を壊さずに柔軟な設定が可能になりました。
 
----
+## 4. 教訓と注意点
+- **DBの反映**: 新しくカラムを追加したため、Supabase側の本番環境にも `migration_add_amount.sql` の適用が必要です。
+- **保存の競合**: Reactの状態管理とAPIの更新タイミング（onChange vs onBlur）には注意が必要です。今回は `onBlur` を採用することで解消しました。
 
-# HANDOVER / 日次報告（2026-02-23）
+## 5. 明確なネクストステップ
+- [ ] **複数端末でのテスト**: 作成したイベントを別のPCやスマホから開き、個別金額が正しく表示されるかの最終確認。
+- [ ] **プルリクエストの作成**: GitHub上で `feature/tilted-payment` から `master` へのプルリクエストを作成し、マージする。
+- [ ] **ユーザーフィードバック**: 主催者設定カードに「個別設定モード」のチェックを明示的に追加するかどうかの検討。
 
-## 1. 今日やったこと（要約）
-- Next.js + Supabase 構成を前提に、参加者・管理者向けの導線とAPIを整理。
-- 参加者ページで「回答一覧表示」「行クリックで編集対象選択」「支払い自己申告」の流れを実装。
-- 公開レスポンス一覧APIとダッシュボードページを追加。
-- APIエラーメッセージを簡潔な日本語へ統一。
-- 文字化けが出ていた箇所をUTF-8前提で修正。
-- 開発中の `Cannot find module './276.js'` は `.next` キャッシュ破損が原因と判断し、削除して復旧。
-
-## 2. 反映済み主な変更
-- 追加
-  - `app/api/events/[id]/responses/public/route.ts`
-  - `app/dashboard/page.tsx`
-- 更新
-  - `app/event/[eventId]/page.tsx`
-  - `app/event/new/page.tsx`
-  - `app/page.tsx`
-  - `app/api/events/route.ts`
-  - `app/api/events/[id]/route.ts`
-  - `app/api/events/[id]/manage/route.ts`
-  - `app/api/events/[id]/responses/route.ts`
-  - `app/api/events/[id]/responses/[responseId]/route.ts`
-  - `app/api/events/[id]/responses/[responseId]/paid/route.ts`
-  - `CLAUDE.md`
-
-## 3. 仕様メモ（現時点）
-- 回答作成: `POST /api/events/[id]/responses`
-- 回答編集: `PATCH /api/events/[id]/responses/[responseId]?edit=...`
-- 支払い自己申告: `PATCH /api/events/[id]/responses/[responseId]/paid?token=...`
-- 公開一覧: `GET /api/events/[id]/responses/public`
-- 運用方針: 同名は別行として扱う（行単位で編集）
-
-## 4. 動作確認メモ
-- `npm run build` 成功を確認済み。
-- 開発サーバー復旧後、`http://localhost:3000` の応答を確認済み。
-
-## 5. 注意点 / 未整理
-- `docs/progress.md` は文字化けが残っており、現状は参照非推奨。
-- 進捗確認はこの `HANDOVER.md` を正とする。
-- `dev.log` はローカル検証ログで、通常はコミット対象外。
-
-## 6. 直近コミット履歴（参考）
-- `8ebb188` feat: add dashboard, public responses API, and improve participant UX
-- `303d7a1` chore: normalize encoding and ignore local env
-- `3411d57` feat: improve participant flow and collection amount UI
-- `08ea877` chore: remove legacy index/config and align docs to Next/Vercel
-
-## 7. 引き継ぎ先（今回の依頼への回答）
-- 今日の作業まとめは **`atsumeru/HANDOVER.md`** に記載しました。
+## 6. 重要ファイルマップ
+- [manage/page.tsx](file:///c:/business/atsumeru/app/event/[eventId]/manage/page.tsx): 管理画面の主要ロジック
+- [page.tsx](file:///c:/business/atsumeru/app/event/[eventId]/page.tsx): 参加者画面の表示ロジック
+- [responses/[responseId]/route.ts](file:///c:/business/atsumeru/app/api/events/[id]/responses/[responseId]/route.ts): 個別回答（金額・支払い状態）の更新API
+- [migration_add_amount.sql](file:///c:/business/atsumeru/migration_add_amount.sql): データベース変更用SQL
