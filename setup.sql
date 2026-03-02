@@ -14,19 +14,19 @@ CREATE TABLE events (
   pay_url TEXT DEFAULT ''
 );
 
-CREATE TABLE members (
+CREATE TABLE responses (
   id TEXT PRIMARY KEY,
   event_id TEXT NOT NULL REFERENCES events(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
   rsvp TEXT CHECK (rsvp IN ('yes', 'no', 'maybe')),
   paid BOOLEAN DEFAULT FALSE,
-  paid_at TEXT
+  paid_at TEXT,
+  amount INTEGER DEFAULT NULL
 );
 
-CREATE INDEX idx_members_event_id ON members(event_id);
+CREATE INDEX idx_responses_event_id ON responses(event_id);
 
 -- RLS有効化 + 全公開ポリシー（認証なしアプリのため）
-ALTER TABLE events ENABLE ROW LEVEL SECURITY;
-ALTER TABLE members ENABLE ROW LEVEL SECURITY;
+ALTER TABLE responses ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "public_events" ON events FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "public_members" ON members FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "public_responses" ON responses FOR ALL USING (true) WITH CHECK (true);

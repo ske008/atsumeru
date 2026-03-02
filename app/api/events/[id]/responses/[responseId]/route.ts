@@ -48,12 +48,16 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     updatePayload.paid_at = body.paid ? new Date().toISOString() : null;
   }
 
+  if (typeof body.amount === "number" || body.amount === null) {
+    updatePayload.amount = body.amount;
+  }
+
   const { data, error } = await supabaseAdmin
     .from("responses")
     .update(updatePayload)
     .eq("id", params.responseId)
     .eq("event_id", params.id)
-    .select("id,name,rsvp,paid,paid_at")
+    .select("id,name,rsvp,paid,paid_at,amount")
     .single();
 
   if (error) {

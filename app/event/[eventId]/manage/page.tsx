@@ -23,6 +23,7 @@ type ResponseRow = {
   rsvp: "yes" | "maybe" | "no";
   paid: boolean;
   paid_at: string | null;
+  amount: number | null;
 };
 
 type UiStatus = {
@@ -73,6 +74,8 @@ export default function ManagePage() {
   const [form, setForm] = useState({ collecting: false, splitMode: false, amount: "", totalAmount: "", splitCount: "", payUrl: "" });
   const [status, setStatus] = useState<UiStatus | null>(null);
   const [savingSetting, setSavingSetting] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkAmount, setBulkAmount] = useState("");
 
   const normalizedAmount = form.amount ? Number(form.amount) : 0;
   const normalizedTotalAmount = form.totalAmount ? Number(form.totalAmount) : 0;
@@ -213,6 +216,55 @@ export default function ManagePage() {
     } catch {
       setStatus({ kind: "error", message: "通信エラーが発生しました。" });
     }
+  };
+
+  const updateIndividualAmount = async (rowId: string, amount: number | null) => {
+    if (!token) return;
+    try {
+      const res = await fetch(`/api/events/${params.eventId}/responses/${rowId}?token=${token}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount }),
+      });
+      if (!res.ok) throw new Error();
+      setResponses((prev) => prev.map((item) => (item.id === rowId ? { ...item, amount } : item)));
+    } catch {
+      setStatus({ kind: "error", message: "金額の更新に失敗しました。" });
+    }
+  };
+
+  const updateSelectedAmounts = async () => {
+    if (!token || selectedIds.size === 0) return;
+    const amount = bulkAmount === "" ? null : Number(bulkAmount);
+    if (amount !== null && Number.isNaN(amount)) return;
+
+    setStatus({ kind: "info", message: "更新中..." });
+    try {
+      await Promise.all(
+        Array.from(selectedIds).map((id) =>
+          fetch(`/api/events/${params.eventId}/responses/${id}?token=${token}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ amount }),
+          })
+        )
+      );
+      setResponses((prev) =>
+        prev.map((item) => (selectedIds.has(item.id) ? { ...item, amount } : item))
+      );
+      setSelectedIds(new Set());
+      setBulkAmount("");
+      setStatus({ kind: "success", message: "一括更新しました。" });
+    } catch {
+      setStatus({ kind: "error", message: "一部の更新に失敗しました。" });
+    }
+  };
+
+  const toggleSelect = (id: string) => {
+    const next = new Set(selectedIds);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    setSelectedIds(next);
   };
 
   return (
@@ -392,26 +444,64 @@ export default function ManagePage() {
               <p className="hint" style={{ marginTop: 0 }}>まだ回答がありません。</p>
             </div>
           ) : (
-            <div className="list" style={{ border: "none", borderTop: `1px solid var(--border)` }}>
-              {responses.map((row) => (
-                <div key={row.id} className="item">
-                  <div>
-                    <div style={{ fontWeight: 600, fontSize: "0.9375rem" }}>{row.name}</div>
-                    <div className="hint" style={{ marginTop: 0 }}>{RSVP_LABEL[row.rsvp]}</div>
+            <>
+              {selectedIds.size > 0 && (
+                <div style={{ padding: "12px 14px", background: "var(--primary-subtle, #eff6ff)", borderTop: "1px solid var(--border)", borderBottom: "1px solid var(--border)", display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap", position: "sticky", top: 0, zIndex: 10 }}>
+                  <span style={{ fontSize: "0.875rem", fontWeight: 600 }}>{selectedIds.size}人を選択中</span>
+                  <div className="money-input-wrap" style={{ width: 140 }}>
+                    <input
+                      className="input input-sm"
+                      placeholder="設定する金額"
+                      value={bulkAmount}
+                      onChange={(e) => setBulkAmount(normalizeAmountInput(e.target.value))}
+                    />
+                    <span className="money-suffix" style={{ fontSize: "0.75rem" }}>円</span>
                   </div>
-                  {form.collecting && row.rsvp === "yes" ? (
-                    <button
-                      className={`btn btn-sm ${row.paid ? "btn-primary" : "btn-ghost"}`}
-                      onClick={() => togglePaid(row)}
-                    >
-                      {row.paid ? "支払い済み" : "未払い"}
-                    </button>
-                  ) : (
-                    <span className="badge">{RSVP_LABEL[row.rsvp]}</span>
-                  )}
+                  <button className="btn btn-primary btn-sm" onClick={updateSelectedAmounts}>一括設定</button>
+                  <button className="btn btn-ghost btn-sm" onClick={() => setSelectedIds(new Set())}>解除</button>
                 </div>
-              ))}
-            </div>
+              )}
+              <div className="list" style={{ border: "none", borderTop: `1px solid var(--border)` }}>
+                {responses.map((row) => (
+                  <div key={row.id} className="item" style={{ alignItems: "center", gap: 12 }}>
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(row.id)}
+                      onChange={() => toggleSelect(row.id)}
+                      style={{ width: 18, height: 18 }}
+                    />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontWeight: 600, fontSize: "0.9375rem" }}>{row.name}</div>
+                      <div className="hint" style={{ marginTop: 0 }}>{RSVP_LABEL[row.rsvp]}</div>
+                    </div>
+
+                    {row.rsvp === "yes" && (
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <div className="money-input-wrap" style={{ width: 100 }}>
+                          <input
+                            className="input input-sm"
+                            placeholder="自動"
+                            value={row.amount === null ? "" : String(row.amount)}
+                            onChange={(e) => updateIndividualAmount(row.id, e.target.value === "" ? null : Number(normalizeAmountInput(e.target.value)))}
+                            style={{ textAlign: "right", paddingRight: 24 }}
+                          />
+                          <span className="money-suffix" style={{ fontSize: "0.75rem" }}>円</span>
+                        </div>
+                        {form.collecting && (
+                          <button
+                            className={`btn btn-sm ${row.paid ? "btn-primary" : "btn-ghost"}`}
+                            onClick={() => togglePaid(row)}
+                            style={{ minWidth: 80 }}
+                          >
+                            {row.paid ? "済" : "未"}
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </>
           )}
         </div>
       </div>
