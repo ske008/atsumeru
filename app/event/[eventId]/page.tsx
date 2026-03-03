@@ -76,15 +76,19 @@ export default function ParticipantPage() {
   const maybeRows = useMemo(() => responses.filter((r) => r.rsvp === "maybe"), [responses]);
   const noRows = useMemo(() => responses.filter((r) => r.rsvp === "no"), [responses]);
 
-  // 割り勘モード: split_count が設定されていればその人数、なければ参加者数で等分
+  // 割り勘モード: 個別設定額を合計から引いて残りを等分
   const defaultDisplayAmount = useMemo(() => {
     if (!event) return 0;
     if (event.total_amount > 0) {
-      const count = event.split_count > 0 ? event.split_count : yesRows.length;
-      if (count > 0) return Math.ceil(event.total_amount / count);
+      const individualTotal = yesRows.reduce((sum, r) => sum + (r.amount ?? 0), 0);
+      const individualCount = yesRows.filter((r) => r.amount !== null).length;
+      const splitTargetCount = Math.max(0, (event.split_count > 0 ? event.split_count : yesRows.length) - individualCount);
+      const remainingAmount = Math.max(0, event.total_amount - individualTotal);
+
+      if (splitTargetCount > 0) return Math.ceil(remainingAmount / splitTargetCount);
     }
     return event.amount;
-  }, [event, yesRows.length]);
+  }, [event, yesRows]);
 
   const fetchResponses = async () => {
     try {
@@ -274,21 +278,12 @@ export default function ParticipantPage() {
           {event.collecting && (event.amount > 0 || event.total_amount > 0) && (
             <div style={{ marginTop: 12 }}>
               {event.total_amount > 0 ? (
-                <>
-                  {(() => {
-                    const count = event.split_count > 0 ? event.split_count : yesRows.length;
-                    return count > 0 ? (
-                      <p style={{ fontSize: "1.1rem", fontWeight: 600 }}>
-                        基本の支払い金額：&yen;{defaultDisplayAmount.toLocaleString()}
-                        <span style={{ fontSize: "0.8rem", fontWeight: 400, color: "var(--muted)", marginLeft: 6 }}>
-                          （合計 {event.total_amount.toLocaleString()}円 ÷ {count}人）
-                        </span>
-                      </p>
-                    ) : (
-                      <p style={{ fontSize: "0.875rem", color: "var(--muted)" }}>合計 {event.total_amount.toLocaleString()}円 ÷ 参加人数で自動計算</p>
-                    );
-                  })()}
-                </>
+                <div className="stack-xs">
+                  <p style={{ fontSize: "1.1rem", fontWeight: 600 }}>
+                    支払い案内：割り勘（傾斜あり）
+                  </p>
+                  <p className="hint">※ 個別設定がある場合はそちらが優先されます</p>
+                </div>
               ) : (
                 <p style={{ fontSize: "1.1rem", fontWeight: 600 }}>
                   支払い金額：&yen;{event.amount.toLocaleString()}
@@ -443,7 +438,12 @@ export default function ParticipantPage() {
                                     color: row.paid ? "#fff" : "var(--muted)",
                                   }}
                                 >
-                                  {row.paid ? "支払い済み" : `未払い (${(row.amount ?? defaultDisplayAmount).toLocaleString()}円)`}
+                                  {row.paid ? "支払い済み" : (
+                                    <>
+                                      未払い (&yen;{(row.amount ?? defaultDisplayAmount).toLocaleString()})
+                                      {row.amount !== null && <span style={{ fontSize: "0.625rem", opacity: 0.8, marginLeft: 2 }}>[固定]</span>}
+                                    </>
+                                  )}
                                 </button>
                               )}
                             </div>

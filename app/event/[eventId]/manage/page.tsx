@@ -80,11 +80,22 @@ export default function ManagePage() {
   const normalizedAmount = form.amount ? Number(form.amount) : 0;
   const normalizedTotalAmount = form.totalAmount ? Number(form.totalAmount) : 0;
   const normalizedSplitCount = form.splitCount ? Number(form.splitCount) : 0;
+
+  const yesResponses = responses.filter((row) => row.rsvp === "yes");
+
+  // 個別設定の合計
+  const individualTotal = yesResponses.reduce((sum, r) => sum + (r.amount ?? 0), 0);
+  const individualCount = yesResponses.filter((r) => r.amount !== null).length;
+
+  // 割り勘の対象人数
+  const splitTargetCount = Math.max(0, (normalizedSplitCount > 0 ? normalizedSplitCount : yesResponses.length) - individualCount);
+  const remainingAmount = Math.max(0, normalizedTotalAmount - individualTotal);
+
+  const calculatedPerPerson = splitTargetCount > 0 ? Math.ceil(remainingAmount / splitTargetCount) : 0;
+
   const amountPreview = normalizedAmount.toLocaleString("ja-JP");
   const totalAmountPreview = normalizedTotalAmount.toLocaleString("ja-JP");
-  const yesResponses = responses.filter((row) => row.rsvp === "yes");
-  // 割り勘の実効人数: 人数指定があればそちらを優先、なければ参加者数
-  const effectiveSplitCount = normalizedSplitCount > 0 ? normalizedSplitCount : yesResponses.length;
+
   const paidResponses = yesResponses.filter((row) => row.paid);
   const paidRatio = yesResponses.length > 0 ? (paidResponses.length / yesResponses.length) * 100 : 0;
 
@@ -379,14 +390,19 @@ export default function ManagePage() {
                         />
                         <span className="money-suffix">人</span>
                       </div>
-                      {normalizedTotalAmount > 0 && effectiveSplitCount > 0 && (
-                        <p className="amount-preview">
-                          {totalAmountPreview}円 ÷ {effectiveSplitCount}人 = {Math.ceil(normalizedTotalAmount / effectiveSplitCount).toLocaleString("ja-JP")}円/人
-                          {normalizedSplitCount === 0 && <span style={{ fontSize: "0.75rem", color: "var(--muted)", marginLeft: 4 }}>（参加者数で計算中）</span>}
-                        </p>
-                      )}
-                      {normalizedTotalAmount > 0 && effectiveSplitCount === 0 && (
-                        <p className="amount-preview">合計 {totalAmountPreview}円 ÷ 人数で計算</p>
+                      {normalizedTotalAmount > 0 && (
+                        <div className="amount-preview" style={{ fontSize: "0.875rem" }}>
+                          <p>全体：{totalAmountPreview}円</p>
+                          {individualCount > 0 && (
+                            <p style={{ color: "var(--primary)", fontWeight: 600 }}>
+                              個別設定：{individualCount}名（計 {individualTotal.toLocaleString()}円）を控除
+                            </p>
+                          )}
+                          <p style={{ marginTop: 4, paddingTop: 4, borderTop: "1px dashed var(--border)" }}>
+                            残り：{remainingAmount.toLocaleString()}円 ÷ {splitTargetCount}人 = <strong>{calculatedPerPerson.toLocaleString()}円/人</strong>
+                          </p>
+                          {normalizedSplitCount === 0 && <p style={{ fontSize: "0.75rem", color: "var(--muted)" }}>（参加者数で自動計算中）</p>}
+                        </div>
                       )}
                     </>
                   )}
@@ -416,15 +432,22 @@ export default function ManagePage() {
                 {paidResponses.length} / {yesResponses.length} 支払い済み
               </span>
             </div>
-            {event && event.total_amount > 0 && (
-              <p style={{ marginTop: 4, fontSize: "0.875rem", color: "var(--muted)" }}>
-                {(() => {
-                  const count = (event.split_count > 0 ? event.split_count : yesResponses.length);
-                  return `合計 ${event.total_amount.toLocaleString("ja-JP")}円 ÷ ${count}人 = 1人あたり ${Math.ceil(event.total_amount / count).toLocaleString("ja-JP")}円`;
-                })()}
-              </p>
+            {event && (event.total_amount > 0 || event.amount > 0) && (
+              <div style={{ marginTop: 8, fontSize: "0.875rem", color: "var(--muted)" }}>
+                {event.total_amount > 0 ? (
+                  <div className="stack-xs">
+                    <p>合計：{event.total_amount.toLocaleString()}円</p>
+                    {individualCount > 0 && <p>個別設定 {individualCount}名分を考慮済み</p>}
+                    <p style={{ color: "var(--foreground)", fontWeight: 600 }}>
+                      通常：{calculatedPerPerson.toLocaleString()}円 / 個別：設定通り
+                    </p>
+                  </div>
+                ) : (
+                  <p>1人あたり：{event.amount.toLocaleString()}円</p>
+                )}
+              </div>
             )}
-            <div className="progress-bar">
+            <div className="progress-bar" style={{ marginTop: 12 }}>
               <div className="progress-fill" style={{ width: `${paidRatio}%` }} />
             </div>
           </div>
