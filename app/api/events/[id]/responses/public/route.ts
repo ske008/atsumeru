@@ -16,7 +16,7 @@ export async function GET(_: Request, { params }: { params: { id: string } }) {
 
   const { data, error } = await supabaseAdmin
     .from("responses")
-    .select("id,name,rsvp,paid,edit_token,created_at")
+    .select("id,name,rsvp,paid,amount,edit_token,created_at")
     .eq("event_id", params.id)
     .order("created_at", { ascending: true });
 

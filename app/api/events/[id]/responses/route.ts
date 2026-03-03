@@ -30,7 +30,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
   const { data, error } = await supabaseAdmin
     .from("responses")
-    .select("id,name,rsvp,paid,paid_at,created_at,updated_at")
+    .select("id,name,rsvp,paid,paid_at,amount,created_at,updated_at")
     .eq("event_id", params.id)
     .order("created_at", { ascending: true });
 
@@ -82,6 +82,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       name,
       rsvp,
       paid: false,
+      amount: typeof body.amount === "number" ? body.amount : null,
       edit_token: editToken,
     })
     .select("id,edit_token")
