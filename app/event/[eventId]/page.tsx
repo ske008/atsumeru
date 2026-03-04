@@ -275,20 +275,11 @@ export default function ParticipantPage() {
             {event.place && <span>{event.place}</span>}
           </div>
           {event.note && <p className="hint">{event.note}</p>}
-          {event.collecting && (event.amount > 0 || event.total_amount > 0) && (
+          {event.collecting && event.amount > 0 && event.total_amount === 0 && (
             <div style={{ marginTop: 12 }}>
-              {event.total_amount > 0 ? (
-                <div className="stack-xs">
-                  <p style={{ fontSize: "1.1rem", fontWeight: 600 }}>
-                    支払い案内：割り勘（傾斜あり）
-                  </p>
-                  <p className="hint">※ 個別設定がある場合はそちらが優先されます</p>
-                </div>
-              ) : (
-                <p style={{ fontSize: "1.1rem", fontWeight: 600 }}>
-                  支払い金額：&yen;{event.amount.toLocaleString()}
-                </p>
-              )}
+              <p style={{ fontSize: "1.1rem", fontWeight: 600 }}>
+                支払い金額：&yen;{event.amount.toLocaleString()}
+              </p>
             </div>
           )}
         </div>
