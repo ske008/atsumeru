@@ -280,7 +280,7 @@ export default function ParticipantPage() {
               {event.total_amount > 0 ? (
                 <div className="stack-xs">
                   <p style={{ fontSize: "1.1rem", fontWeight: 600 }}>
-                    支払い案内：割り勘（傾斜あり）
+                    支払い案内：割り勘
                   </p>
                   <p className="hint">※ 個別設定がある場合はそちらが優先されます</p>
                 </div>
