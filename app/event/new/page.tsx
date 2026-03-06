@@ -76,7 +76,7 @@ export default function NewEventPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title: form.title.trim(),
-          date: form.date || null,
+          date: form.date ? new Date(form.date).toISOString() : null,
           place: form.place.trim() || null,
           note: form.note.trim() || null,
           collecting: form.collecting,

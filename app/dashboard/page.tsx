@@ -26,6 +26,7 @@ function fmtDate(value: string | null) {
   if (!value) return "日時未設定";
   try {
     return new Date(value).toLocaleString("ja-JP", {
+      timeZone: "Asia/Tokyo",
       month: "long",
       day: "numeric",
       weekday: "short",
