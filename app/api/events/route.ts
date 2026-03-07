@@ -32,6 +32,19 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "人数は0以上の数字で入力してください。" }, { status: 400 });
     }
 
+    let payUrl: string | null = null;
+    if (typeof body.pay_url === "string" && body.pay_url.trim()) {
+      try {
+        const parsed = new URL(body.pay_url.trim());
+        if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+          return NextResponse.json({ error: "支払いURLはhttp://またはhttps://で始まる必要があります。" }, { status: 400 });
+        }
+        payUrl = parsed.toString();
+      } catch {
+        return NextResponse.json({ error: "支払いURLの形式が正しくありません。" }, { status: 400 });
+      }
+    }
+
     const ownerToken = randomToken();
     const { data, error } = await supabaseAdmin
       .from("events")
@@ -44,7 +57,7 @@ export async function POST(req: NextRequest) {
         amount,
         total_amount: totalAmount,
         split_count: splitCount,
-        pay_url: typeof body.pay_url === "string" && body.pay_url.trim() ? body.pay_url.trim() : null,
+        pay_url: payUrl,
         owner_token: ownerToken,
       })
       .select("id")
