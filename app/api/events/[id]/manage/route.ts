@@ -45,6 +45,19 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     return NextResponse.json({ error: "管理トークンが一致しません。" }, { status: 403 });
   }
 
+  let payUrl: string | null = null;
+  if (typeof body.pay_url === "string" && body.pay_url.trim()) {
+    try {
+      const parsed = new URL(body.pay_url.trim());
+      if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+        return NextResponse.json({ error: "支払いURLはhttp://またはhttps://で始まる必要があります。" }, { status: 400 });
+      }
+      payUrl = parsed.toString();
+    } catch {
+      return NextResponse.json({ error: "支払いURLの形式が正しくありません。" }, { status: 400 });
+    }
+  }
+
   const { data, error } = await supabaseAdmin
     .from("events")
     .update({
@@ -52,7 +65,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       amount,
       total_amount: totalAmount,
       split_count: splitCount,
-      pay_url: typeof body.pay_url === "string" && body.pay_url.trim() ? body.pay_url.trim() : null,
+      pay_url: payUrl,
     })
     .eq("id", params.id)
     .select("id,collecting,amount,total_amount,split_count,pay_url")
