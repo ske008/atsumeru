@@ -15,8 +15,12 @@ create table if not exists public.events (
   split_count integer not null default 0,
   pay_url text null,
   owner_token text not null unique,
+  ip_hash text null,
   created_at timestamptz not null default now()
 );
+
+-- Add ip_hash to existing tables if migrating from older schema
+alter table public.events add column if not exists ip_hash text null;
 
 create table if not exists public.responses (
   id uuid primary key default gen_random_uuid(),
@@ -35,6 +39,10 @@ create index if not exists idx_responses_event_created_at
 
 create index if not exists idx_responses_event_name
   on public.responses(event_id, name);
+
+-- Index for rate limiting: count events per IP per month
+create index if not exists idx_events_ip_hash_created_at
+  on public.events(ip_hash, created_at);
 
 alter table public.events enable row level security;
 alter table public.responses enable row level security;

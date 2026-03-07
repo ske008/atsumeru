@@ -4,8 +4,26 @@ import { mergeOwnerTokens, readOwnerTokensFromRequest, writeOwnerTokensCookie } 
 
 export const dynamic = "force-dynamic";
 
+const MONTHLY_LIMIT = 10;
+
 function randomToken() {
   return crypto.randomUUID().replace(/-/g, "");
+}
+
+function getClientIp(req: NextRequest): string | null {
+  const forwarded = req.headers.get("x-forwarded-for");
+  if (forwarded) {
+    return forwarded.split(",")[0].trim();
+  }
+  return req.headers.get("x-real-ip");
+}
+
+async function hashIp(ip: string): Promise<string> {
+  const salt = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "atsumeru-rate-limit-salt";
+  const data = new TextEncoder().encode(ip + salt);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
 export async function POST(req: NextRequest) {
@@ -45,6 +63,28 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Rate limiting: max MONTHLY_LIMIT events per IP per calendar month
+    const clientIp = getClientIp(req);
+    let ipHash: string | null = null;
+    if (clientIp) {
+      ipHash = await hashIp(clientIp);
+      const now = new Date();
+      const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString();
+
+      const { count, error: countError } = await supabaseAdmin
+        .from("events")
+        .select("id", { count: "exact", head: true })
+        .eq("ip_hash", ipHash)
+        .gte("created_at", monthStart);
+
+      if (!countError && (count ?? 0) >= MONTHLY_LIMIT) {
+        return NextResponse.json(
+          { error: `1端末からのイベント作成は月${MONTHLY_LIMIT}回までです。来月またお試しください。` },
+          { status: 429 }
+        );
+      }
+    }
+
     const ownerToken = randomToken();
     const { data, error } = await supabaseAdmin
       .from("events")
@@ -59,6 +99,7 @@ export async function POST(req: NextRequest) {
         split_count: splitCount,
         pay_url: payUrl,
         owner_token: ownerToken,
+        ip_hash: ipHash,
       })
       .select("id")
       .single();
